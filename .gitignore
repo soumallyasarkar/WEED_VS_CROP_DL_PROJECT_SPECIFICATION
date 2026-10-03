@@ -1,0 +1,46 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Datasets and large data files
+data/raw/
+data/processed/*.pt
+*.zip
+*.tar.gz
+*.tar
+
+# Models and checkpoints
+models/*.pt
+models/*.pth
+models/*.onnx
+
+# Third party repositories
+third_party/
+
+# Outputs
+outputs/predictions/*
+!outputs/predictions/.gitkeep
+outputs/plots/*
+!outputs/plots/.gitkeep
+outputs/reports/*
+!outputs/reports/.gitkeep
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Environment variables
+.env
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

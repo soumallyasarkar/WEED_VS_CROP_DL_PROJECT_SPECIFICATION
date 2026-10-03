@@ -1,0 +1,44 @@
+seed: 42
+paths:
+  raw_dir: data/raw/cropandweed
+  processed_dir: data/processed
+  models_dir: models
+  outputs_dir: outputs
+
+data:
+  variant: CropOrWeed2
+  split:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+    group_by: session
+  subset_fraction: 0.25
+  max_samples: 300
+
+model:
+  name: fasterrcnn_mobilenet_v3_large_fpn
+  num_classes: 3
+  min_size: 480
+  max_size: 800
+  pretrained: true
+
+train:
+  epochs: 5
+  batch_size: 2
+  optimizer: sgd
+  lr: 0.005
+  momentum: 0.9
+  weight_decay: 0.0005
+  warmup_iters: 50
+  scheduler: cosine
+  freeze_backbone_epochs: 1
+  early_stopping_patience: 3
+  num_workers: 0
+
+eval:
+  iou_threshold: 0.5
+  score_threshold: 0.5
+
+inference:
+  score_threshold: 0.5
+  nms_iou: 0.5
