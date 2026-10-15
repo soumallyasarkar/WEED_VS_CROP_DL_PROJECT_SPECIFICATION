@@ -44,6 +44,7 @@ weed-vs-crop-discrimination/
 │   ├── class_mapping.json        # {"background": 0, "crop": 1, "weed": 2}
 │   ├── best.pt                   # Best model weights checkpoint (mAP@0.5: 0.4091)
 │   └── last.pt                   # Final epoch checkpoint
+├── sample_images/                # 20 curated real field photographs for instant first-run testing
 ├── outputs/
 │   ├── plots/                    # EDA, confusion matrices, PR curves, learning curves, samples
 │   │   ├── samples.png           # Ground-truth sample visualizer
@@ -103,7 +104,9 @@ weed-vs-crop-discrimination/
 
 ## 3. 🚀 How to Run This Project
 
-This section provides exact commands to launch any component of the system. All commands can be run directly using the pre-configured virtual environment (`.venv`).
+> [!TIP]
+> **Instant Try Out for First-Time Users:**
+> A curated folder of **20 real agricultural field photographs** ([`sample_images/`](file:///c:/Github/WEED_VS_CROP_DL_PROJECT_SPECIFICATION/sample_images)) is pre-packaged in the repository so you can test the CLI detector and the Streamlit web demo immediately without needing to download the multi-gigabyte dataset!
 
 ### 3.1 Environment Activation
 
@@ -122,7 +125,7 @@ Before running commands, activate the virtual environment or use the direct bina
   source .venv/bin/activate
   ```
 
-> [!TIP]
+> [!NOTE]
 > You can also run any command directly without activating the environment by prefixing `.\.venv\Scripts\` on Windows (e.g., `.\.venv\Scripts\streamlit run ...` or `.\.venv\Scripts\python -m ...`).
 
 ---
@@ -143,8 +146,8 @@ Launch the interactive web demo to upload field photographs, adjust detection co
   * Select **`cpu`** for standard CPU computation (~250–600 ms per image).
 * **Confidence Threshold Slider:** Adjust between `0.10` and `0.95` (recommended default: `0.50`). Lower thresholds catch more subtle/tiny weeds; higher thresholds avoid false herbicide alarms.
 * **Sample Images to Upload:**
-  * Dataset images: `data/raw/cropandweed/images/ave-0000-0001.jpg`
-  * Test samples: `outputs/predictions/non_dataset_test_sample.jpg`
+  * Ready-to-use sample images: Pick any image from [`sample_images/`](file:///c:/Github/WEED_VS_CROP_DL_PROJECT_SPECIFICATION/sample_images) (e.g., `sample_images/ave-0000-0001.jpg`, `sample_images/ave-0035-0005.jpg`)
+  * External test samples: `outputs/predictions/non_dataset_test_sample.jpg`
 
 ---
 
@@ -153,7 +156,7 @@ Launch the interactive web demo to upload field photographs, adjust detection co
 Run inference directly from the command line on any field photograph (JPEG/PNG) and export both an annotated visual image and structured JSON results:
 
 ```powershell
-.\.venv\Scripts\python -m src.inference.predict --image data/raw/cropandweed/images/ave-0000-0001.jpg --checkpoint models/best.pt --score-threshold 0.50 --out outputs/predictions/
+.\.venv\Scripts\python -m src.inference.predict --image sample_images/ave-0000-0001.jpg --checkpoint models/best.pt --score-threshold 0.50 --out outputs/predictions/
 ```
 
 * **Outputs Generated:**
