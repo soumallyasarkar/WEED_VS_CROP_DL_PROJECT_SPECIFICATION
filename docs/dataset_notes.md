@@ -60,4 +60,34 @@ Defined in `cnw/utilities/datasets.py`:
   - 70% Train
   - 15% Validation
   - 15% Test
-- Split assignments will be saved in `data/processed/splits.csv` and validated for zero session overlap.
+- Split assignments are saved in `data/processed/splits.csv` and validated for zero session overlap.
+
+---
+
+## 6. Verified Local Dataset Statistics & Verification Evidence
+
+As verified during Phase 3 EDA (`scripts/prepare_dataset.py`) and stored in `data/processed/stats.json`:
+
+* **Total Images Processed**: 2,003 field photographs (`.jpg`) in `data/raw/cropandweed/images/`.
+* **Image Integrity**: 100% valid (0 corrupt, 0 unreadable files).
+* **Native Resolution**: Uniform 1920 × 1088 px.
+* **Recording Sessions**: 194 distinct sessions.
+* **Total Plant Annotations**: 19,785 instances.
+  * **Crop Instances**: 5,128 annotations (25.9%)
+  * **Weed Instances**: 14,657 annotations (74.1% weed prevalence)
+* **Instance Bounding Box Size Distribution**:
+  * Tiny (< 32 × 32 px): 4,314 boxes (21.8%)
+  * Small (32 – 96 px): 9,150 boxes (46.2%)
+  * Medium (96 – 256 px): 4,702 boxes (23.8%)
+  * Large (> 256 px): 1,619 boxes (8.2%)
+  * *Over 68% of plants are small or tiny, proving the necessity of Feature Pyramid Networks (FPN).*
+* **Session-Grouped Splits (`data/processed/splits.csv`)**:
+  * **Train Split**: 1,381 images across 135 sessions (13,678 total plants: 3,556 crops, 10,122 weeds).
+  * **Validation Split**: 338 images across 29 sessions (3,315 total plants: 853 crops, 2,462 weeds).
+  * **Test Split**: 284 images across 30 sessions (2,792 total plants: 719 crops, 2,073 weeds).
+  * **Session Leakage**: **Strictly 0.0% overlap** across all three sets (verified by `tests/test_splits.py`).
+* **Visual Artifacts**:
+  * `outputs/plots/samples.png` (12-sample visualizer)
+  * `outputs/plots/class_distribution.png` (Crop vs Weed counts)
+  * `outputs/plots/box_size_hist.png` (Instance scale histogram)
+

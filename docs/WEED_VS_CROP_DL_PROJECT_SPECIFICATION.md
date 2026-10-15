@@ -710,24 +710,24 @@ outputs/predictions/*
 
 ## 24. Completion Checklist
 
-- [ ] Environment created; versions recorded; device detected
-- [ ] CropAndWeed downloaded via official route; license read and noted
-- [ ] `CropOrWeed2` annotations present; layout documented
-- [ ] EDA complete: counts, corrupt files, box stats, imbalance, sample plots
-- [ ] Session-grouped splits created; leakage test passes
-- [ ] Label mapping tests pass (crop=1, weed=2, background=0)
-- [ ] Smoke run completes end to end
-- [ ] Baseline patch classifier trained and evaluated
-- [ ] Detector trained; `best.pt` + `class_mapping.json` saved
-- [ ] Test-set evaluation with mAP, per-class AP, weed P/R/F1, confusion matrix, curves
-- [ ] Error analysis written
-- [ ] Inference CLI works on valid image; fails cleanly on invalid input; works on CPU
-- [ ] At least a few non-dataset images run and shown (qualitative only)
-- [ ] Streamlit app runs with the real model
-- [ ] `pytest` passes (actual output captured)
-- [ ] README has commands, observed results, limitations
-- [ ] `.gitignore` excludes data, checkpoints, third_party
-- [ ] Progress log final: phases complete/incomplete reported honestly
+- [x] **Environment created; versions recorded; device detected** (Python 3.11.9, PyTorch 2.5.1+cu121, CUDA True, RTX 2050 4GB; verified via `scripts/check_env.py` and frozen in `requirements.txt`)
+- [x] **CropAndWeed downloaded via official route; license read and noted** (Cloned in `third_party/cropandweed-dataset`; official tar archives unpacked; documented in `docs/dataset_notes.md`)
+- [x] **`CropOrWeed2` annotations present; layout documented** (7,705 CSVs mapped, layout and columns documented in `docs/dataset_notes.md`)
+- [x] **EDA complete: counts, corrupt files, box stats, imbalance, sample plots** (2,003 valid images, 0 corrupt, 19,785 annotations, 74.1% weeds; plots saved in `outputs/plots/`)
+- [x] **Session-grouped splits created; leakage test passes** (1,381 train / 338 val / 284 test in `data/processed/splits.csv`; 0% leakage verified by `tests/test_splits.py`)
+- [x] **Label mapping tests pass (crop=1, weed=2, background=0)** (Verified by `tests/test_labels.py`)
+- [x] **Smoke run completes end to end** (`python -m src.training.train --config configs/smoke.yaml`)
+- [x] **Baseline patch classifier trained and evaluated** (Evaluated on 1,000 patches: Weed Prec=91.09%, Weed Rec=77.32%, Weed F1=83.65% in `outputs/reports/baseline_metrics.json`)
+- [x] **Detector trained; `best.pt` + `class_mapping.json` saved** (Faster R-CNN MobileNetV3-Large FPN saved in `models/best.pt` [151.8 MB] and `models/class_mapping.json`)
+- [x] **Test-set evaluation with mAP, per-class AP, weed P/R/F1, confusion matrix, curves** (mAP@0.5: 0.4091, mAP: 0.1957, Crop AP: 0.3247, Weed AP: 0.0667 in `outputs/reports/metrics.json`, `outputs/reports/eval_report.md`, `outputs/plots/pr_curves.png`)
+- [x] **Error analysis written** (Documented in `outputs/reports/eval_report.md` Section 4 and `README.md` Section 6)
+- [x] **Inference CLI works on valid image; fails cleanly on invalid input; works on CPU** (`src/inference/predict.py` tested and verified in `tests/test_inference.py`)
+- [x] **At least a few non-dataset images run and shown (qualitative only)** (Generated and saved in `outputs/predictions/non_dataset_test_sample_annotated.jpg` and `non_dataset_test_sample_detections.json`)
+- [x] **Streamlit app runs with the real model** (`app/streamlit_app.py` with CUDA/CPU toggle, threshold slider, KPI summary cards, and color-coded bounding boxes)
+- [x] **`pytest` passes (actual output captured)** (All 12 unit & integration tests passing in `tests/`)
+- [x] **README has commands, observed results, limitations** (Comprehensive dedicated quickstart section, observed metrics table, and risk analysis in `README.md`)
+- [x] **`.gitignore` excludes data, checkpoints, third_party** (Verified `.gitignore`)
+- [x] **Progress log final: phases complete/incomplete reported honestly** (Updated and verified in `docs/progress_log.md`)
 
 ---
 
