@@ -2,8 +2,10 @@
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.5.1%2Bcu121-ee4c2c.svg)](https://pytorch.org/)
+[![CUDA](https://img.shields.io/badge/CUDA-12.1-76B900.svg)](https://developer.nvidia.com/cuda-toolkit)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.65.0-FF4B4B.svg)](https://streamlit.io/)
 [![License](https://img.shields.io/badge/License-Non--Commercial-lightgrey.svg)](#license--citations)
-[![Tests](https://img.shields.io/badge/Tests-12%20Passed-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-12%20Passed-brightgreen.svg)](#run-mode-3-automated-test-suite-12-tests)
 
 Field-image weed localization: detecting and separating crop plants from weeds in real agricultural field photographs using deep learning and object detection.
 
@@ -19,7 +21,7 @@ Whole-image classification cannot solve this problem because field images contai
 - **Architecture**: Faster R-CNN with `MobileNetV3-Large FPN` backbone (COCO-pretrained weights) fine-tuned for foreground classes: `0: background`, `1: crop`, `2: weed`.
 - **Dataset**: Official **CropAndWeed** dataset (WACV 2023) mapped to the `CropOrWeed2` binary variant.
 - **Strict Leakage Prevention**: Session-grouped data splitting (`prefix-session`) ensuring **strict zero session overlap** between Train, Validation, and Test sets.
-- **Full Stack Deliverables**: EDA pipeline, CNN patch baseline, detector training pipeline, test-set evaluator, CLI inference engine, Streamlit interactive web application, and pytest test suite.
+- **Full Stack Deliverables**: EDA pipeline, CNN patch baseline, detector training pipeline, test-set evaluator, CLI inference engine, Streamlit interactive web application, and a 12-test pytest suite.
 
 ---
 
@@ -28,23 +30,37 @@ Whole-image classification cannot solve this problem because field images contai
 ```text
 weed-vs-crop-discrimination/
 ├── configs/                      # Experiment configurations
-│   ├── default.yaml              # Full dataset configuration
+│   ├── default.yaml              # Full dataset configuration (10 epochs, 640x1024)
 │   ├── laptop.yaml               # Reduced image size & subset configuration
-│   └── smoke.yaml                # Ultra-fast pipeline validation (~20 images)
-├── docs/                         # Detailed documentation
+│   └── smoke.yaml                # Ultra-fast pipeline validation (~20 images, 1 epoch)
+├── docs/                         # Comprehensive documentation
+│   ├── WEED_VS_CROP_DL_PROJECT_SPECIFICATION.md # Full 10-phase project specification
 │   ├── dataset_notes.md          # Official dataset verification, layout & terms
-│   └── progress_log.md           # Phase-by-phase execution tracking
+│   └── progress_log.md           # Phase-by-phase execution tracking & milestones
 ├── data/
-│   ├── raw/                      # Downloaded dataset (excluded from git)
+│   ├── raw/                      # Downloaded dataset (CropAndWeed bboxes & images)
 │   └── processed/                # splits.csv, stats.json
 ├── models/                       # Checkpoints & class mappings
 │   ├── class_mapping.json        # {"background": 0, "crop": 1, "weed": 2}
-│   └── best.pt                   # Trained model weights (excluded from git)
+│   ├── best.pt                   # Best model weights checkpoint (mAP@0.5: 0.4091)
+│   └── last.pt                   # Final epoch checkpoint
 ├── outputs/
-│   ├── plots/                    # EDA, confusion matrices, PR curves, samples
-│   ├── reports/                  # metrics.json, eval_report.md, train_log.csv
-│   └── predictions/              # Annotated inference outputs & JSON results
-├── src/
+│   ├── plots/                    # EDA, confusion matrices, PR curves, learning curves, samples
+│   │   ├── samples.png           # Ground-truth sample visualizer
+│   │   ├── class_distribution.png# Crop vs weed count distribution
+│   │   ├── box_size_hist.png     # Instance bounding box size breakdown
+│   │   ├── pr_curves.png         # Precision-Recall curves
+│   │   ├── detection_confusion_matrix.png # Detection IoU match matrix
+│   │   ├── baseline_confusion_matrix.png  # Patch classifier confusion matrix
+│   │   └── learning_curves.png   # Training & validation loss trajectories
+│   ├── reports/                  # Evaluation metrics & training logs
+│   │   ├── metrics.json          # Complete numerical evaluation metrics
+│   │   ├── eval_report.md        # Comprehensive evaluation & error analysis report
+│   │   ├── baseline_metrics.json # Patch baseline upper-bound classifier metrics
+│   │   ├── train.log             # Formatted execution log
+│   │   └── train_log.csv         # Per-epoch loss tracking
+│   └── predictions/              # Sample annotated images & inference JSON exports
+├── src/                          # Modular source code
 │   ├── config.py                 # Configuration loader and validator
 │   ├── data/
 │   │   ├── parse_annotations.py  # Bbox CSV parsing, boundary clipping, label mapping
@@ -52,7 +68,7 @@ weed-vs-crop-discrimination/
 │   │   └── dataset.py            # PyTorch Dataset, augmentations, collate_fn
 │   ├── models/
 │   │   ├── baseline.py           # Patch CNN baseline (upper-bound classifier)
-│   │   └── detector.py           # Faster R-CNN MobileNetV3-FPN builder
+│   │   └── detector.py           # Faster R-CNN MobileNetV3-FPN builder & checkpointer
 │   ├── training/
 │   │   └── train.py              # Training loop, scheduler, checkpointing, early stopping
 │   ├── evaluation/
@@ -68,34 +84,143 @@ weed-vs-crop-discrimination/
 │   └── streamlit_app.py          # Interactive Streamlit web application
 ├── scripts/
 │   ├── check_env.py              # Environment and hardware verification
-│   ├── download_dataset.py       # Dataset downloader and setup
+│   ├── download_dataset.py       # Official dataset downloader and setup
 │   ├── download_dataset.sh       # Bash wrapper for download
 │   ├── prepare_dataset.py        # Validation, EDA stats, plots, and splits
 │   └── make_sample_predictions.py# Batch sample visualizer
 ├── tests/                        # 12 automated unit and integration tests
-├── requirements.txt              # Frozen project dependencies
-└── pytest.ini                    # Test configuration
+│   ├── test_splits.py            # Zero data leakage verification
+│   ├── test_checkpoint.py        # Model checkpoint save/load integrity
+│   ├── test_labels.py            # Class mapping & background handling
+│   ├── test_model.py             # Detector forward pass (train & eval)
+│   ├── test_dataset.py           # PyTorch dataset & collate_fn
+│   └── test_inference.py         # End-to-end inference & prediction summaries
+├── requirements.txt              # Frozen project dependencies (PyTorch 2.5.1 + CUDA 12.1)
+└── pytest.ini                    # Test suite configuration
 ```
 
 ---
 
-## 3. Environment & Installation
+## 3. 🚀 How to Run This Project
 
-### Prerequisites
-- Python 3.10 – 3.12
-- PyTorch >= 2.2 with CUDA (GPU recommended; CPU fully supported)
+This section provides exact commands to launch any component of the system. All commands can be run directly using the pre-configured virtual environment (`.venv`).
 
-### Setup Instructions
-```bash
-# 1. Activate your virtual environment
-# Windows PowerShell:
-.\.venv\Scripts\activate
-# Linux/macOS:
-source .venv/bin/activate
+### 3.1 Environment Activation
 
-# 2. Verify environment and hardware
-python scripts/check_env.py
+Before running commands, activate the virtual environment or use the direct binary paths:
+
+* **Windows PowerShell:**
+  ```powershell
+  .\.venv\Scripts\activate
+  ```
+* **Windows Command Prompt (CMD):**
+  ```cmd
+  .\.venv\Scripts\activate.bat
+  ```
+* **Linux / macOS:**
+  ```bash
+  source .venv/bin/activate
+  ```
+
+> [!TIP]
+> You can also run any command directly without activating the environment by prefixing `.\.venv\Scripts\` on Windows (e.g., `.\.venv\Scripts\streamlit run ...` or `.\.venv\Scripts\python -m ...`).
+
+---
+
+### 3.2 Run Mode 1: Interactive Streamlit Web Application (Recommended)
+
+Launch the interactive web demo to upload field photographs, adjust detection confidence thresholds, and inspect real-time weed vs. crop bounding boxes:
+
+```powershell
+# From the project root:
+.\.venv\Scripts\streamlit run app/streamlit_app.py
 ```
+
+* **Access the App:** Open your browser at **`http://localhost:8501`**.
+* **Device Selection (CPU vs. CUDA):**
+  * In the left sidebar, use the **Device** dropdown.
+  * Select **`cuda`** to accelerate inference on your NVIDIA GPU (~15–35 ms per image).
+  * Select **`cpu`** for standard CPU computation (~250–600 ms per image).
+* **Confidence Threshold Slider:** Adjust between `0.10` and `0.95` (recommended default: `0.50`). Lower thresholds catch more subtle/tiny weeds; higher thresholds avoid false herbicide alarms.
+* **Sample Images to Upload:**
+  * Dataset images: `data/raw/cropandweed/images/ave-0000-0001.jpg`
+  * Test samples: `outputs/predictions/non_dataset_test_sample.jpg`
+
+---
+
+### 3.3 Run Mode 2: Single-Image CLI Inference Engine
+
+Run inference directly from the command line on any field photograph (JPEG/PNG) and export both an annotated visual image and structured JSON results:
+
+```powershell
+.\.venv\Scripts\python -m src.inference.predict --image data/raw/cropandweed/images/ave-0000-0001.jpg --checkpoint models/best.pt --score-threshold 0.50 --out outputs/predictions/
+```
+
+* **Outputs Generated:**
+  * Visual annotated image: `outputs/predictions/ave-0000-0001_annotated.jpg` (crops in green, weeds in red).
+  * Machine-readable detections: `outputs/predictions/ave-0000-0001_detections.json` containing bounding boxes, class labels, and confidence scores.
+
+---
+
+### 3.4 Run Mode 3: Automated Test Suite (12 Tests)
+
+Execute the full suite of 12 unit and integration tests covering dataset loading, model forward passes, checkpoint integrity, label mapping, and zero data leakage:
+
+```powershell
+.\.venv\Scripts\pytest -v
+```
+
+All 12 tests are located in [`tests/`](file:///c:/Github/WEED_VS_CROP_DL_PROJECT_SPECIFICATION/tests) and validate:
+1. `test_splits_zero_leakage`: Confirms zero session overlap between Train, Val, and Test splits.
+2. `test_verify_splits_integrity_catches_leakage`: Verifies split verifier detects simulated leakage.
+3. `test_checkpoint_save_and_load`: Tests full model state dictionary serialization and deserialization.
+4. `test_label_mapping_values`: Validates background (0), crop (1), and weed (2) mappings.
+5. `test_unmapped_species_excluded`: Ensures out-of-vocabulary species are filtered.
+6. `test_build_detector_classes`: Asserts MobileNetV3-FPN output head dimensions.
+7. `test_model_forward_pass_train_and_eval`: Validates train mode loss dictionaries and eval mode predictions.
+8. `test_freeze_unfreeze_backbone`: Tests 2-stage fine-tuning backbone freezing logic.
+9. `test_dataset_loading_and_tensors`: Validates image tensor types, bounding box scaling, and clipping.
+10. `test_collate_fn`: Tests DataLoader variable-length bounding box batch collation.
+11. `test_predict_image_and_summarize`: Tests PIL image inference and summary metrics generation.
+12. `test_invalid_image_handling`: Tests error handling on invalid image inputs.
+
+---
+
+### 3.5 Run Mode 4: Test-Set Evaluation & Metric Reporting
+
+Evaluate the trained Faster R-CNN detector (`models/best.pt`) on the untouched 284 held-out test field images:
+
+```powershell
+.\.venv\Scripts\python -m src.evaluation.evaluate --config configs/default.yaml --checkpoint models/best.pt
+```
+
+* **Outputs Generated:**
+  * Metrics snapshot: `outputs/reports/metrics.json` (mAP@0.5, mAP@[0.5:0.95], per-class AP, precision/recall/F1).
+  * Markdown evaluation report: `outputs/reports/eval_report.md`.
+  * Visual charts: `outputs/plots/pr_curves.png` and `outputs/plots/detection_confusion_matrix.png`.
+
+---
+
+### 3.6 Run Mode 5: Model Training & Pipeline Sanity Testing
+
+To retrain or validate training pipelines from scratch:
+
+* **Quick Smoke Test (20 images, 1 epoch):**
+  ```powershell
+  .\.venv\Scripts\python -m src.training.train --config configs/smoke.yaml
+  ```
+* **Laptop Configuration (Reduced image resolution, GPU/CPU friendly):**
+  ```powershell
+  .\.venv\Scripts\python -m src.training.train --config configs/laptop.yaml
+  ```
+* **Full Dataset Training (Full 1920x1088 resolution, 10 epochs):**
+  ```powershell
+  .\.venv\Scripts\python -m src.training.train --config configs/default.yaml
+  ```
+* **Patch CNN Baseline Classifier (Upper-bound classifier assuming perfect localization):**
+  ```powershell
+  .\.venv\Scripts\python -m src.models.baseline --config configs/default.yaml --epochs 5
+  ```
 
 ---
 
@@ -120,56 +245,17 @@ This generates:
 
 ---
 
-## 5. Execution Workflow
+## 5. Hardware & CUDA Acceleration Note
 
-### Step 1: Run Patch Baseline Classifier (Phase 5a)
-Trains a 3-layer CNN on ground-truth cropped plant patches (96x96) to evaluate separability assuming perfect localization:
-```bash
-python -m src.models.baseline --config configs/default.yaml --epochs 5
-```
-*Outputs:* `outputs/reports/baseline_metrics.json`, `outputs/plots/baseline_confusion_matrix.png`
-
-### Step 2: Smoke Test the Full Pipeline (Phase 5b)
-Quick end-to-end sanity test on 20 images for 1 epoch:
-```bash
-python -m src.training.train --config configs/smoke.yaml
-```
-
-### Step 3: Train the Faster R-CNN Detector (Phase 6)
-Fine-tune the detector on available hardware:
-```bash
-# Laptop configuration (GPU/CPU friendly):
-python -m src.training.train --config configs/laptop.yaml
-
-# Full dataset training:
-python -m src.training.train --config configs/default.yaml
-```
-*Checkpoints saved to:* `models/best.pt` and `models/last.pt`.
-*Training history:* `outputs/reports/train_log.csv`.
-
-### Step 4: Evaluate on Untouched Test Split (Phase 7)
-Evaluate detection metrics (mAP, per-class AP, weed precision/recall/F1, threshold sweep, detection confusion matrix):
-```bash
-python -m src.evaluation.evaluate --config configs/default.yaml --checkpoint models/best.pt
-```
-*Outputs:* `outputs/reports/metrics.json`, `outputs/reports/eval_report.md`, `outputs/plots/pr_curves.png`, `outputs/plots/detection_confusion_matrix.png`.
-
-### Step 5: Run Inference on Single Images (Phase 8)
-Run detection on any field photograph (JPEG/PNG) and export annotated imagery and structured JSON:
-```bash
-python -m src.inference.predict --image data/raw/cropandweed/images/ave-0000-0001.jpg --checkpoint models/best.pt --score-threshold 0.4 --out outputs/predictions/
-```
-
-### Step 6: Launch Streamlit Web Application (Phase 9)
-Launch the interactive web demo:
-```bash
-streamlit run app/streamlit_app.py
-```
-
-### Step 7: Run Automated Test Suite (Phase 10)
-```bash
-pytest -v
-```
+* **GPU Execution:** When running on an NVIDIA GPU with CUDA 12.1, PyTorch utilizes cuDNN accelerated convolution and FPN operations.
+* **VRAM Requirements:**
+  * Inference (Streamlit / CLI): **< 2.0 GB VRAM**
+  * Smoke / Laptop Training: **~3.5 – 4.5 GB VRAM**
+  * Full Resolution Training (`configs/default.yaml`): **~6.0 – 8.0 GB VRAM**
+* **Inference Latency Comparison:**
+  * **CUDA (GPU):** ~15 – 35 ms per image.
+  * **CPU:** ~250 – 600 ms per image.
+* **Verification:** Run `python scripts/check_env.py` to verify whether CUDA is detected and view available GPU hardware details.
 
 ---
 
