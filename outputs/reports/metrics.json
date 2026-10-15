@@ -1,0 +1,91 @@
+{
+  "evaluation_split": "test",
+  "test_images_count": 282,
+  "checkpoint": "models/best.pt",
+  "score_threshold": 0.5,
+  "iou_threshold": 0.5,
+  "mAP": 0.343,
+  "mAP_50": 0.5486,
+  "crop_AP": 0.5973,
+  "weed_AP": 0.0888,
+  "weed_precision": 0.4328,
+  "weed_recall": 0.2538,
+  "weed_f1": 0.32,
+  "crop_precision": 0.669,
+  "crop_recall": 0.8709,
+  "crop_f1": 0.7567,
+  "detection_confusion_matrix": [
+    [
+      479,
+      18,
+      53
+    ],
+    [
+      97,
+      554,
+      1532
+    ],
+    [
+      140,
+      708,
+      0
+    ]
+  ],
+  "cm_legend": "Rows=Ground Truth [Crop, Weed, Background], Columns=Prediction [Crop, Weed, Background]",
+  "threshold_sweep": [
+    {
+      "threshold": 0.1,
+      "weed_precision": 0.1665,
+      "weed_recall": 0.4246,
+      "weed_f1": 0.2392
+    },
+    {
+      "threshold": 0.2,
+      "weed_precision": 0.2215,
+      "weed_recall": 0.3834,
+      "weed_f1": 0.2808
+    },
+    {
+      "threshold": 0.3,
+      "weed_precision": 0.2775,
+      "weed_recall": 0.3472,
+      "weed_f1": 0.3084
+    },
+    {
+      "threshold": 0.4,
+      "weed_precision": 0.3438,
+      "weed_recall": 0.2996,
+      "weed_f1": 0.3202
+    },
+    {
+      "threshold": 0.5,
+      "weed_precision": 0.4328,
+      "weed_recall": 0.2538,
+      "weed_f1": 0.32
+    },
+    {
+      "threshold": 0.6,
+      "weed_precision": 0.5267,
+      "weed_recall": 0.1988,
+      "weed_f1": 0.2887
+    },
+    {
+      "threshold": 0.7,
+      "weed_precision": 0.6183,
+      "weed_recall": 0.1425,
+      "weed_f1": 0.2316
+    },
+    {
+      "threshold": 0.8,
+      "weed_precision": 0.6865,
+      "weed_recall": 0.1003,
+      "weed_f1": 0.1751
+    },
+    {
+      "threshold": 0.9,
+      "weed_precision": 0.7832,
+      "weed_recall": 0.0513,
+      "weed_f1": 0.0963
+    }
+  ]
+}

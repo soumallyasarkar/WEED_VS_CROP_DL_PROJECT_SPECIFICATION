@@ -34,8 +34,7 @@ third_party/
 # Outputs
 outputs/predictions/*
 !outputs/predictions/.gitkeep
-outputs/reports/*
-!outputs/reports/.gitkeep
+
 
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints/

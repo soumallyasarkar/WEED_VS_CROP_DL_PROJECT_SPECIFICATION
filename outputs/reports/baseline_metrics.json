@@ -1,0 +1,24 @@
+{
+  "model": "PatchCNN_3Layer_Baseline",
+  "description": "Upper-bound classification baseline assuming perfect bounding box crops",
+  "test_patch_count": 1000,
+  "test_accuracy": 0.756,
+  "majority_class_accuracy": 0.807,
+  "weed_precision": 0.9109,
+  "weed_recall": 0.7732,
+  "weed_f1": 0.8365,
+  "confusion_matrix": [
+    [
+      132,
+      61
+    ],
+    [
+      183,
+      624
+    ]
+  ],
+  "class_labels": [
+    "Crop (0)",
+    "Weed (1)"
+  ]
+}

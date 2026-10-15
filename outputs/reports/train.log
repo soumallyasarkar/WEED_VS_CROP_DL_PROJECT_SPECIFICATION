@@ -1,0 +1,65 @@
+[2026-10-03 15:56:05] [INFO] [train]: Loaded configuration from configs/laptop.yaml
+[2026-10-03 15:56:05] [INFO] [train]: Training on device: cuda:0 (NVIDIA GeForce RTX 2050)
+[2026-10-03 15:56:18] [INFO] [train]: Beginning training for 5 epochs (Early stopping patience: 3)...
+[2026-10-03 15:57:07] [INFO] [train]: Epoch 1/5 [49.1s] - Train Loss: 0.5976 | Val mAP: 0.1266 | Val mAP@50: 0.3102 | Crop AP: 0.2429 | Weed AP: 0.0104
+[2026-10-03 15:57:08] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.1266
+[2026-10-03 15:57:08] [INFO] [train]: Unfrozen backbone for fine-tuning.
+[2026-10-03 15:58:12] [INFO] [train]: Epoch 2/5 [63.8s] - Train Loss: 0.5359 | Val mAP: 0.1523 | Val mAP@50: 0.2999 | Crop AP: 0.2996 | Weed AP: 0.0049
+[2026-10-03 15:58:12] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.1523
+[2026-10-03 15:59:13] [INFO] [train]: Epoch 3/5 [60.2s] - Train Loss: 0.5255 | Val mAP: 0.2092 | Val mAP@50: 0.4008 | Crop AP: 0.3783 | Weed AP: 0.0400
+[2026-10-03 15:59:13] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2092
+[2026-10-03 16:00:12] [INFO] [train]: Epoch 4/5 [58.6s] - Train Loss: 0.5239 | Val mAP: 0.2406 | Val mAP@50: 0.4418 | Crop AP: 0.4495 | Weed AP: 0.0317
+[2026-10-03 16:00:13] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2406
+[2026-10-03 16:01:11] [INFO] [train]: Epoch 5/5 [58.0s] - Train Loss: 0.4927 | Val mAP: 0.2658 | Val mAP@50: 0.4418 | Crop AP: 0.4980 | Weed AP: 0.0336
+[2026-10-03 16:01:12] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2658
+[2026-10-03 16:01:12] [INFO] [train]: Training completed in 4.90 minutes. Best Val mAP: 0.2658
+[2026-10-15 22:28:26] [INFO] [train]: Loaded configuration from configs/high_accuracy.yaml
+[2026-10-15 22:28:26] [INFO] [train]: Training on device: cuda:0 (NVIDIA GeForce RTX 2050)
+[2026-10-15 22:28:28] [INFO] [train]: Beginning training for 10 epochs (Early stopping patience: 4)...
+[2026-10-15 22:30:25] [INFO] [train]: Epoch 1/10 [116.9s] - Train Loss: 0.5859 | Val mAP: 0.1478 | Val mAP@50: 0.3323 | Crop AP: 0.2736 | Weed AP: 0.0221
+[2026-10-15 22:30:25] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.1478
+[2026-10-15 22:30:25] [INFO] [train]: Unfrozen backbone for fine-tuning.
+[2026-10-15 22:33:03] [INFO] [train]: Epoch 2/10 [157.6s] - Train Loss: 0.6186 | Val mAP: 0.2271 | Val mAP@50: 0.4461 | Crop AP: 0.3935 | Weed AP: 0.0607
+[2026-10-15 22:33:03] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2271
+[2026-10-15 22:35:41] [INFO] [train]: Epoch 3/10 [158.0s] - Train Loss: 0.6390 | Val mAP: 0.2458 | Val mAP@50: 0.4629 | Crop AP: 0.4041 | Weed AP: 0.0874
+[2026-10-15 22:35:43] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2458
+[2026-10-15 22:38:20] [INFO] [train]: Epoch 4/10 [157.9s] - Train Loss: 0.6167 | Val mAP: 0.2689 | Val mAP@50: 0.4881 | Crop AP: 0.4606 | Weed AP: 0.0772
+[2026-10-15 22:38:21] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2689
+[2026-10-15 22:41:03] [INFO] [train]: Epoch 5/10 [162.0s] - Train Loss: 0.6008 | Val mAP: 0.2918 | Val mAP@50: 0.4960 | Crop AP: 0.4990 | Weed AP: 0.0845
+[2026-10-15 22:41:04] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2918
+[2026-10-15 22:43:37] [INFO] [train]: Epoch 6/10 [153.2s] - Train Loss: 0.5635 | Val mAP: 0.2997 | Val mAP@50: 0.5099 | Crop AP: 0.5092 | Weed AP: 0.0901
+[2026-10-15 22:43:37] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2997
+[2026-10-15 22:46:32] [INFO] [train]: Epoch 7/10 [174.2s] - Train Loss: 0.5509 | Val mAP: 0.3173 | Val mAP@50: 0.5315 | Crop AP: 0.5388 | Weed AP: 0.0958
+[2026-10-15 22:46:33] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.3173
+[2026-10-15 22:50:23] [INFO] [train]: Epoch 8/10 [229.8s] - Train Loss: 0.5377 | Val mAP: 0.3211 | Val mAP@50: 0.5265 | Crop AP: 0.5350 | Weed AP: 0.1072
+[2026-10-15 22:50:24] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.3211
+[2026-10-15 22:53:31] [INFO] [train]: Epoch 9/10 [186.6s] - Train Loss: 0.5265 | Val mAP: 0.3289 | Val mAP@50: 0.5295 | Crop AP: 0.5497 | Weed AP: 0.1081
+[2026-10-15 22:53:32] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.3289
+[2026-10-15 22:56:38] [INFO] [train]: Epoch 10/10 [186.3s] - Train Loss: 0.5055 | Val mAP: 0.3327 | Val mAP@50: 0.5349 | Crop AP: 0.5565 | Weed AP: 0.1089
+[2026-10-15 22:56:39] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.3327
+[2026-10-15 22:56:39] [INFO] [train]: Training completed in 28.19 minutes. Best Val mAP: 0.3327
+[2026-10-15 23:06:11] [INFO] [train]: Loaded configuration from configs/full_dataset.yaml
+[2026-10-15 23:06:11] [INFO] [train]: Training on device: cuda:0 (NVIDIA GeForce RTX 2050)
+[2026-10-15 23:06:12] [INFO] [train]: Beginning training for 10 epochs (Early stopping patience: 4)...
+[2026-10-15 23:12:02] [INFO] [train]: Epoch 1/10 [349.4s] - Train Loss: 0.5287 | Val mAP: 0.1645 | Val mAP@50: 0.3580 | Crop AP: 0.2962 | Weed AP: 0.0328
+[2026-10-15 23:12:03] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.1645
+[2026-10-15 23:12:03] [INFO] [train]: Unfrozen backbone for fine-tuning.
+[2026-10-15 23:17:53] [INFO] [train]: Epoch 2/10 [349.7s] - Train Loss: 0.6397 | Val mAP: 0.2517 | Val mAP@50: 0.4705 | Crop AP: 0.4151 | Weed AP: 0.0884
+[2026-10-15 23:17:54] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2517
+[2026-10-15 23:23:47] [INFO] [train]: Epoch 3/10 [353.0s] - Train Loss: nan | Val mAP: 0.2714 | Val mAP@50: 0.4859 | Crop AP: 0.4472 | Weed AP: 0.0956
+[2026-10-15 23:23:47] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2714
+[2026-10-15 23:28:51] [INFO] [train]: Epoch 4/10 [303.9s] - Train Loss: 0.6332 | Val mAP: 0.2898 | Val mAP@50: 0.5043 | Crop AP: 0.4644 | Weed AP: 0.1153
+[2026-10-15 23:28:52] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2898
+[2026-10-15 23:34:44] [INFO] [train]: Epoch 5/10 [351.7s] - Train Loss: 0.6345 | Val mAP: 0.2979 | Val mAP@50: 0.5217 | Crop AP: 0.4832 | Weed AP: 0.1125
+[2026-10-15 23:34:45] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.2979
+[2026-10-15 23:40:52] [INFO] [train]: Epoch 6/10 [367.3s] - Train Loss: nan | Val mAP: 0.3029 | Val mAP@50: 0.5168 | Crop AP: 0.4888 | Weed AP: 0.1171
+[2026-10-15 23:40:53] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.3029
+[2026-10-15 23:47:25] [INFO] [train]: Epoch 7/10 [391.7s] - Train Loss: 0.6001 | Val mAP: 0.3166 | Val mAP@50: 0.5371 | Crop AP: 0.5119 | Weed AP: 0.1213
+[2026-10-15 23:47:26] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.3166
+[2026-10-15 23:53:19] [INFO] [train]: Epoch 8/10 [352.6s] - Train Loss: nan | Val mAP: 0.3229 | Val mAP@50: 0.5322 | Crop AP: 0.5232 | Weed AP: 0.1225
+[2026-10-15 23:53:20] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.3229
+[2026-10-15 23:59:25] [INFO] [train]: Epoch 9/10 [364.9s] - Train Loss: 0.5814 | Val mAP: 0.3292 | Val mAP@50: 0.5307 | Crop AP: 0.5259 | Weed AP: 0.1325
+[2026-10-15 23:59:26] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.3292
+[2026-10-16 00:04:44] [INFO] [train]: Epoch 10/10 [317.7s] - Train Loss: 0.5605 | Val mAP: 0.3362 | Val mAP@50: 0.5368 | Crop AP: 0.5411 | Weed AP: 0.1313
+[2026-10-16 00:04:45] [INFO] [train]: --> New best model saved to models\best.pt with mAP=0.3362
+[2026-10-16 00:04:45] [INFO] [train]: Training completed in 58.54 minutes. Best Val mAP: 0.3362
