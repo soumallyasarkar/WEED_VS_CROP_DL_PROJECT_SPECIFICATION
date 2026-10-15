@@ -28,8 +28,6 @@ third_party/
 # Outputs
 outputs/predictions/*
 !outputs/predictions/.gitkeep
-outputs/plots/*
-!outputs/plots/.gitkeep
 outputs/reports/*
 !outputs/reports/.gitkeep
 

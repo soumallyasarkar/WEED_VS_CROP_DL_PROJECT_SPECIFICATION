@@ -1,0 +1,50 @@
+# High-Accuracy Configuration for Weed vs Crop Detection
+# Engineered to boost Weed AP and overall mAP@[0.5:0.95]
+seed: 42
+
+paths:
+  raw_dir: data/raw/cropandweed
+  processed_dir: data/processed
+  models_dir: models
+  outputs_dir: outputs
+
+data:
+  variant: CropOrWeed2
+  split:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+    group_by: session
+  # Scaled up from 300 to 750 images (over 2.5x more training data across diverse field sessions)
+  subset_fraction: 0.55
+  max_samples: 750
+
+model:
+  name: fasterrcnn_mobilenet_v3_large_fpn
+  num_classes: 3
+  # Higher spatial resolution to preserve tiny weed seedlings (<32px) on FPN feature maps
+  min_size: 600
+  max_size: 960
+  pretrained: true
+
+train:
+  # Doubled training duration from 5 to 10 epochs
+  epochs: 10
+  batch_size: 2
+  optimizer: sgd
+  lr: 0.005
+  momentum: 0.9
+  weight_decay: 0.0005
+  warmup_iters: 100
+  scheduler: cosine
+  freeze_backbone_epochs: 1
+  early_stopping_patience: 4
+  num_workers: 0
+
+eval:
+  iou_threshold: 0.5
+  score_threshold: 0.5
+
+inference:
+  score_threshold: 0.40
+  nms_iou: 0.50

@@ -1,0 +1,49 @@
+# 100% Full Dataset Training Configuration for Weed vs Crop Detection
+# Uses all 1,381 training field images across all 135 sessions (0.0% data leakage)
+seed: 42
+
+paths:
+  raw_dir: data/raw/cropandweed
+  processed_dir: data/processed
+  models_dir: models
+  outputs_dir: outputs
+
+data:
+  variant: CropOrWeed2
+  split:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+    group_by: session
+  # 100% Full Training Split (all 1,381 images across 135 sessions)
+  subset_fraction: 1.0
+  max_samples: null
+
+model:
+  name: fasterrcnn_mobilenet_v3_large_fpn
+  num_classes: 3
+  # High spatial resolution to capture small weed seedlings (<32px) on FPN
+  min_size: 600
+  max_size: 960
+  pretrained: true
+
+train:
+  epochs: 10
+  batch_size: 2
+  optimizer: sgd
+  lr: 0.005
+  momentum: 0.9
+  weight_decay: 0.0005
+  warmup_iters: 150
+  scheduler: cosine
+  freeze_backbone_epochs: 1
+  early_stopping_patience: 4
+  num_workers: 0
+
+eval:
+  iou_threshold: 0.5
+  score_threshold: 0.5
+
+inference:
+  score_threshold: 0.40
+  nms_iou: 0.50

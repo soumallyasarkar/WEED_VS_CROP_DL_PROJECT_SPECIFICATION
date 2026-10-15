@@ -3,12 +3,19 @@
 import argparse
 import csv
 import logging
+import sys
 import time
 from pathlib import Path
 from typing import Any, Dict
 
+# Ensure project root is in sys.path
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 import torch
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 from src.config import load_config
 from src.data.dataset import WeedCropDetectionDataset, collate_fn
@@ -141,7 +148,8 @@ def train(config_path: str = "configs/default.yaml") -> Dict[str, Any]:
         running_loss = 0.0
         total_batches = 0
 
-        for images, targets in train_loader:
+        pbar = tqdm(train_loader, desc=f"Epoch {epoch:2d}/{epochs}", unit="batch", leave=True)
+        for images, targets in pbar:
             images = [img.to(device) for img in images]
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
@@ -155,11 +163,16 @@ def train(config_path: str = "configs/default.yaml") -> Dict[str, Any]:
 
             running_loss += losses.item()
             total_batches += 1
+            pbar.set_postfix({
+                "loss": f"{losses.item():.4f}",
+                "avg_loss": f"{running_loss / total_batches:.4f}"
+            })
 
         scheduler.step()
         epoch_loss = running_loss / max(1, total_batches)
 
         # Validation evaluation
+        print(f" -> Running validation evaluation for Epoch {epoch}...", flush=True)
         val_metrics = evaluate_model_map(model, val_loader, device)
         epoch_time = time.time() - epoch_start
         current_lr = optimizer.param_groups[0]["lr"]

@@ -43,18 +43,51 @@ def main():
     )
 
     st.sidebar.header("Model Settings")
-    checkpoint_file = st.sidebar.text_input("Checkpoint Path", value=CHECKPOINT_DEFAULT)
+
+    models_dir = PROJECT_ROOT / "models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+
+    # Discover all .pt files and place the newest / best model first by default
+    all_pt_files = [p.name for p in models_dir.glob("*.pt") if p.is_file()]
+    all_pt_files.sort(key=lambda name: (models_dir / name).stat().st_mtime, reverse=True)
+
+    if "best.pt" in all_pt_files:
+        all_pt_files.remove("best.pt")
+        all_pt_files.insert(0, "best.pt")
+
+    if not all_pt_files:
+        all_pt_files = ["best.pt"]
+
+    # Model dropdown just like device selection
+    model_choice = st.sidebar.selectbox("Model", options=all_pt_files, index=0, key="model_select")
+    checkpoint_file = str(models_dir / model_choice)
+
+    # Upload custom .pt file directly from UI
+    uploaded_model = st.sidebar.file_uploader("Upload Model (.pt)", type=["pt"], key="pt_upload")
+    if uploaded_model is not None:
+        target_path = models_dir / uploaded_model.name
+        with open(target_path, "wb") as f:
+            f.write(uploaded_model.getbuffer())
+        st.sidebar.success(f"Saved `{uploaded_model.name}` to models/!")
+        st.rerun()
+
+    # Hardware compute selector
+    device_choice = st.sidebar.selectbox(
+        "Device",
+        options=["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"],
+        index=0,
+        key="device_select",
+    )
+
     score_threshold = st.sidebar.slider(
         "Confidence Score Threshold",
         min_value=0.10,
         max_value=0.95,
         value=0.50,
         step=0.05,
+        key="conf_slider",
         help="Detections below this threshold are omitted to reduce false alarms.",
     )
-
-    device_option = "cuda" if torch.cuda.is_available() else "cpu"
-    device_choice = st.sidebar.selectbox("Device", options=["cpu", "cuda"] if torch.cuda.is_available() else ["cpu"], index=0)
 
     # Checkpoint validation
     ckpt_path = Path(checkpoint_file)
