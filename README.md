@@ -6,7 +6,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.5.1-ee4c2c.svg)](https://pytorch.org/)
 [![CUDA](https://img.shields.io/badge/CUDA-12.1-76B900.svg)](https://developer.nvidia.com/cuda-toolkit)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.65.0-FF4B4B.svg)](https://streamlit.io/)
-[![License](https://img.shields.io/badge/License-Non--Commercial-lightgrey.svg)](#8-license--citations)
+[![License](https://img.shields.io/badge/License-Non--Commercial-lightgrey.svg)](#9-license--citations)
 [![Tests](https://img.shields.io/badge/Tests-12%20Passed-brightgreen.svg)](#3-automated-test-suite-12-tests-in-8s)
 
 Field-image weed localization: detecting and separating crop plants from weeds in real agricultural field photographs using deep learning and object detection.
@@ -20,11 +20,11 @@ Manual weed scouting across vast crop fields is labor-intensive and subjective, 
 Whole-image classification cannot solve this problem because field images contain **both** crops and weeds simultaneously. This project formulates the problem as **object detection**, predicting a bounding box, category label (`crop` vs `weed`), and confidence score for every plant instance.
 
 ### Key Highlights
-- **Architecture**: Faster R-CNN with `MobileNetV3-Large FPN` backbone (COCO-pretrained weights) fine-tuned for foreground classes: `0: background`, `1: crop`, `2: weed`.
-- **Dataset**: Official **CropAndWeed** dataset (WACV 2023) mapped to the `CropOrWeed2` binary variant.
+- **Architecture**: Faster R-CNN with `MobileNetV3-Large FPN` backbone (COCO-pretrained weights) fine-tuned for foreground classes: `0: background`, `1: crop`, `2: weed` (see [Architecture Diagrams & Gallery](docs/FIGURES_AND_SCREENSHOTS_GALLERY.md)).
+- **Dataset**: Official **CropAndWeed** dataset (WACV 2023) mapped to the `CropOrWeed2` binary variant (see [Dataset Notes](docs/dataset_notes.md)).
 - **Strict Leakage Prevention**: Session-grouped data splitting (`prefix-session`) ensuring **strict zero session overlap** between Train, Validation, and Test sets.
 - **Pre-packaged Model & Samples**: The trained model weights (`models/best.pt`, 72.5 MB) and 20 real agricultural test photographs (`sample_images/`) are included directly in the repository for instant evaluation without downloading the full multi-GB dataset.
-- **Full Stack Deliverables**: EDA pipeline, CNN patch baseline, detector training pipeline, test-set evaluator, CLI inference engine, Streamlit interactive web application, and a 12-test automated pytest suite.
+- **Full Stack Deliverables**: Complete 10-phase engineering lifecycle covering EDA, CNN baseline, detector training, test-set evaluation, CLI inference, interactive Streamlit application, and a 12-test automated pytest suite (see [Project Specification](docs/WEED_VS_CROP_DL_PROJECT_SPECIFICATION.md)).
 
 ---
 
@@ -96,6 +96,7 @@ python scripts/download_dataset.py --parts annotations images1
 # Generate session-grouped splits (zero leakage) and EDA plots
 python scripts/prepare_dataset.py --config configs/default.yaml
 ```
+*(Detailed dataset notes: [docs/dataset_notes.md](docs/dataset_notes.md))*
 
 #### 2. Train with Dynamic Epochs According to Available Time
 You can dynamically specify the number of epochs via `--epochs <N>` without editing configuration files. Real-time terminal progress is tracked via `tqdm`:
@@ -115,11 +116,25 @@ You can dynamically specify the number of epochs via `--epochs <N>` without edit
 ```bash
 python -m src.evaluation.evaluate --config configs/default.yaml --checkpoint models/best.pt
 ```
-Evaluates the detector on 284 held-out test images, generating `outputs/reports/metrics.json`, `eval_report.md`, PR curves, and confusion matrices.
+Evaluates the detector on 284 held-out test images, generating [`outputs/reports/metrics.json`](outputs/reports/metrics.json) and [`outputs/reports/eval_report.md`](outputs/reports/eval_report.md).
 
 ---
 
-## 3. Directory Structure
+## 3. Comprehensive Documentation Hub
+
+All technical specifications, evaluation walkthroughs, diagrams, and progress logs are located in the [`docs/`](docs/) directory:
+
+| Document | Direct Link | Primary Scope & Contents |
+|---|---|---|
+| **Setup & Evaluation Guide** | [docs/SETUP_AND_EVALUATION_GUIDE.md](docs/SETUP_AND_EVALUATION_GUIDE.md) | Step-by-step evaluator instructions, dynamic epoch benchmarks (CPU vs GPU), visual web demo features, and grading checklists. |
+| **Figures & Detection Gallery** | [docs/FIGURES_AND_SCREENSHOTS_GALLERY.md](docs/FIGURES_AND_SCREENSHOTS_GALLERY.md) | High-resolution visual figures, MobileNetV3-FPN architecture Mermaid flowchart, Streamlit UI mockup, PR curves, and confusion matrices. |
+| **10-Phase Project Specification** | [docs/WEED_VS_CROP_DL_PROJECT_SPECIFICATION.md](docs/WEED_VS_CROP_DL_PROJECT_SPECIFICATION.md) | Complete 10-phase engineering specification, mathematical formulations, loss functions, acceptance criteria, and system constraints. |
+| **Dataset Notes & Schema** | [docs/dataset_notes.md](docs/dataset_notes.md) | Official CropAndWeed dataset verification, multi-spectral camera layout, binary mapping rules, and license terms. |
+| **Development Progress Log** | [docs/progress_log.md](docs/progress_log.md) | Chronological development audit, phase completion milestones, training loss logs, and experiment history. |
+
+---
+
+## 4. Directory Structure
 
 ```text
 weed-vs-crop-discrimination/
@@ -194,7 +209,7 @@ weed-vs-crop-discrimination/
 
 ---
 
-## 4. Hardware & CUDA Acceleration
+## 5. Hardware & CUDA Acceleration
 
 * **GPU Execution:** When running on an NVIDIA GPU with CUDA 12.1, PyTorch utilizes cuDNN accelerated convolution and FPN operations.
 * **VRAM Requirements:**
@@ -208,7 +223,7 @@ weed-vs-crop-discrimination/
 
 ---
 
-## 5. Observed Dataset & Benchmark Performance
+## 6. Observed Dataset & Benchmark Performance
 
 From the 2,003 validated field photographs (`1920x1088` resolution, 0 corrupt images):
 - **Crop Instances**: 5,128 annotations
@@ -220,12 +235,12 @@ From the 2,003 validated field photographs (`1920x1088` resolution, 0 corrupt im
   - `Large (> 256 px)`: 1,619 boxes (8.2%)
 - Over **68% of all instances are small or tiny**, verifying the necessity of Feature Pyramid Networks (FPN) for multi-scale feature resolution.
 
-### 5.1 Baseline Patch Classifier (Phase 5a)
+### 6.1 Baseline Patch Classifier (Phase 5a)
 Evaluated on 1,000 test patches with ground-truth boxes:
 - **Accuracy**: 75.60% (Majority baseline: 80.70%)
 - **Weed Precision**: 91.09% | **Weed Recall**: 77.32% | **Weed F1**: 83.65%
 
-### 5.2 Detector Performance on Untouched Test Split (Phase 7)
+### 6.2 Detector Performance on Untouched Test Split (Phase 7)
 Evaluated on 284 held-out test field images with Faster R-CNN MobileNetV3-Large FPN (`models/best.pt`):
 
 | Metric | Value | Description |
@@ -247,9 +262,11 @@ Evaluated on 284 held-out test field images with Faster R-CNN MobileNetV3-Large 
 - At threshold 0.70: Weed Precision = 67.17%, Weed Recall = 12.25% (F1 = 20.72%)
 - At threshold 0.90: Weed Precision = 78.65%, Weed Recall = 2.78% (F1 = 5.36%)
 
+*(Full numerical report: [`outputs/reports/eval_report.md`](outputs/reports/eval_report.md) · Raw metrics: [`outputs/reports/metrics.json`](outputs/reports/metrics.json))*
+
 ---
 
-## 6. Limitations & Agricultural Risk Analysis
+## 7. Limitations & Agricultural Risk Analysis
 
 - **Site & Lighting Specificity**: The model was trained on ground-level handheld agricultural photos in Central Europe. Generalization to aerial drone imagery, tractor-mounted boom cameras, different crop cultivars, or arid soils cannot be assumed without domain adaptation.
 - **False Positive vs False Negative Costs**:
@@ -260,7 +277,7 @@ Evaluated on 284 held-out test field images with Faster R-CNN MobileNetV3-Large 
 
 ---
 
-## 7. Authors & Project Team
+## 8. Authors & Project Team
 
 This project was developed at the **Indian Institute of Information Technology Kottayam (IIIT Kottayam)**, Department of Computer Science and Engineering:
 
@@ -272,7 +289,7 @@ This project was developed at the **Indian Institute of Information Technology K
 
 ---
 
-## 8. License & Citations
+## 9. License & Citations
 
 The CropAndWeed dataset is made available by AIT Austrian Institute of Technology GmbH under a custom non-commercial license for academic, research, and educational purposes.
 
