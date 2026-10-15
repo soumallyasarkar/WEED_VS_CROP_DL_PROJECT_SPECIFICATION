@@ -66,7 +66,7 @@ def train(config_path: str = "configs/default.yaml") -> Dict[str, Any]:
         splits_path=splits_path,
         split="val",
         subset_fraction=subset_fraction,
-        max_samples=max_samples // 2 if max_samples else None,
+        max_samples=max(1, max_samples // 2) if max_samples else None,
         is_train=False,
     )
 
@@ -126,6 +126,7 @@ def train(config_path: str = "configs/default.yaml") -> Dict[str, Any]:
 
     logger.info(f"Beginning training for {epochs} epochs (Early stopping patience: {patience})...")
     start_total_time = time.time()
+    epoch = 0
 
     for epoch in range(1, epochs + 1):
         epoch_start = time.time()

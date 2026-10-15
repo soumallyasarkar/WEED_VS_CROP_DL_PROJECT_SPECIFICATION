@@ -75,7 +75,12 @@ def predict_image(
         raise ValueError("Image has zero width or height.")
 
     # Shared preprocessing: PIL to tensor in [0.0, 1.0]
-    img_tensor = F.to_tensor(img_rgb).to(device)
+    try:
+        target_device = next(model.parameters()).device
+    except (StopIteration, AttributeError):
+        target_device = torch.device(device)
+
+    img_tensor = F.to_tensor(img_rgb).to(target_device)
 
     model.eval()
     with torch.no_grad():

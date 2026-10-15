@@ -84,6 +84,10 @@ class PatchDataset(Dataset):
                 cx2 = min(w, int(x2 + pad_x))
                 cy2 = min(h, int(y2 + pad_y))
 
+                if cx2 <= cx1 or cy2 <= cy1:
+                    dummy = torch.zeros((3, self.image_size, self.image_size), dtype=torch.float32)
+                    return dummy, target
+
                 crop = img_rgb.crop((cx1, cy1, cx2, cy2))
                 tensor = self.transform(crop)
                 return tensor, target

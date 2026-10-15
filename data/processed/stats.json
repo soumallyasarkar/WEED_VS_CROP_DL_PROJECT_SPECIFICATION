@@ -1,14 +1,14 @@
 {
-  "total_images_in_dir": 2003,
-  "valid_images": 2003,
+  "total_images_in_dir": 2000,
+  "valid_images": 2000,
   "corrupt_images": 0,
-  "images_with_annotations": 1739,
-  "images_without_annotations": 264,
-  "total_crop_instances": 5128,
-  "total_weed_instances": 14657,
+  "images_with_annotations": 1737,
+  "images_without_annotations": 263,
+  "total_crop_instances": 5091,
+  "total_weed_instances": 14655,
   "total_dropped_boxes": 0,
   "image_resolutions": {
-    "1920x1088": 2003
+    "1920x1088": 2000
   },
   "sessions": [
     "ave-0000",
@@ -201,61 +201,58 @@
     "ave-0333",
     "ave-0334",
     "ave-0336",
-    "ave-0337",
-    "ave-0357",
-    "ave-0506",
-    "ave-0527"
+    "ave-0337"
   ],
   "box_size_buckets": {
-    "tiny (<32x32)": 4314,
-    "small (32-96)": 9150,
-    "medium (96-256)": 4702,
-    "large (>256)": 1619
+    "tiny (<32x32)": 4311,
+    "small (32-96)": 9127,
+    "medium (96-256)": 4695,
+    "large (>256)": 1613
   },
-  "num_sessions": 194,
+  "num_sessions": 191,
   "corrupt_files": [],
   "params_distributions": {
     "moisture": {
-      "0": 1105,
+      "0": 1102,
       "1": 718,
       "2": 180
     },
     "soil": {
       "1": 49,
-      "0": 1928,
+      "0": 1925,
       "2": 26
     },
     "lighting": {
-      "0": 1347,
+      "0": 1344,
       "1": 656
     },
     "separability": {
-      "0": 1834,
+      "0": 1831,
       "1": 159,
       "2": 10
     }
   },
   "split_summary": {
     "train": {
-      "images": 1381,
-      "sessions": 135,
-      "crop_instances": 3621,
-      "weed_instances": 8934,
-      "total_instances": 12555
+      "images": 1416,
+      "sessions": 133,
+      "crop_instances": 3673,
+      "weed_instances": 10259,
+      "total_instances": 13932
     },
     "val": {
-      "images": 338,
+      "images": 302,
       "sessions": 29,
-      "crop_instances": 943,
-      "weed_instances": 3201,
-      "total_instances": 4144
+      "crop_instances": 868,
+      "weed_instances": 2213,
+      "total_instances": 3081
     },
     "test": {
-      "images": 284,
-      "sessions": 30,
-      "crop_instances": 564,
-      "weed_instances": 2522,
-      "total_instances": 3086
+      "images": 282,
+      "sessions": 29,
+      "crop_instances": 550,
+      "weed_instances": 2183,
+      "total_instances": 2733
     }
   }
 }

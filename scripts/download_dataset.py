@@ -48,35 +48,109 @@ def extract_tar(tar_path: Path, extract_dir: Path) -> None:
         tar.extractall(extract_dir)
 
 
+# Official species ID sets according to Steininger et al. (WACV 2023)
+CROP_SPECIES_IDS = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 18, 24, 26, 27, 94}
+WEED_SPECIES_IDS = {
+    22, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 41, 42, 44, 45, 47, 48, 49, 50,
+    51, 52, 54, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72,
+    74, 75, 76, 77, 78, 79, 80, 81, 83, 84, 85, 86, 87, 88, 89, 91, 96
+}
+
+
+def direct_map_croporweed2(bboxes_dir: Path) -> int:
+    """Direct built-in Python mapping of bounding box annotations to CropOrWeed2."""
+    source_dir = bboxes_dir / "CropAndWeed"
+    if not source_dir.exists():
+        source_dir = bboxes_dir
+
+    target_dir = bboxes_dir / "CropOrWeed2"
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    csv_files = [f for f in source_dir.glob("*.csv") if f.name != "CropOrWeed2"]
+    if not csv_files:
+        return 0
+
+    print(f"Mapping {len(csv_files)} annotation files to CropOrWeed2 directly...")
+    mapped_count = 0
+    for csv_file in csv_files:
+        if csv_file.parent == target_dir:
+            continue
+        out_rows = []
+        with open(csv_file, "r", encoding="utf-8") as f:
+            for line in f:
+                parts = line.strip().split(",")
+                if len(parts) >= 5:
+                    try:
+                        raw_id = int(float(parts[4]))
+                        if raw_id in CROP_SPECIES_IDS:
+                            parts[4] = "0"  # Crop
+                            out_rows.append(",".join(parts) + "\n")
+                        elif raw_id in WEED_SPECIES_IDS:
+                            parts[4] = "1"  # Weed
+                            out_rows.append(",".join(parts) + "\n")
+                    except (ValueError, IndexError):
+                        continue
+
+        out_path = target_dir / csv_file.name
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.writelines(out_rows)
+        mapped_count += 1
+
+    print(f"Direct mapping complete: {mapped_count} files written to {target_dir}")
+    return mapped_count
+
+
 def map_croporweed2(data_root: Path) -> None:
     """Run CropOrWeed2 mapping using the official script or utility."""
     print("Mapping annotations to CropOrWeed2 variant...")
-    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "third_party" / "cropandweed-dataset" / "cnw"))
-    try:
-        from map_dataset import map_dataset  # type: ignore
-        bboxes_dir = data_root / "bboxes"
-        labelids_dir = data_root / "labelIds"
-        
-        # Verify structure: raw annotations are often extracted to bboxes/CropAndWeed or directly bboxes/
-        source_bboxes = bboxes_dir / "CropAndWeed"
-        if not source_bboxes.exists() and bboxes_dir.exists():
-            # If bboxes files are directly in bboxes/, organize into bboxes/CropAndWeed
-            csv_files = [f for f in bboxes_dir.iterdir() if f.is_file() and f.suffix == ".csv"]
-            if csv_files:
-                temp_dir = data_root / "CropAndWeed_temp"
-                temp_dir.mkdir(exist_ok=True)
-                for f in csv_files:
-                    shutil.move(str(f), str(temp_dir / f.name))
-                source_bboxes.mkdir(parents=True, exist_ok=True)
-                for f in temp_dir.iterdir():
-                    shutil.move(str(f), str(source_bboxes / f.name))
-                temp_dir.rmdir()
+    bboxes_dir = data_root / "bboxes"
+    target_variant = bboxes_dir / "CropOrWeed2"
 
-        map_dataset(str(bboxes_dir), str(labelids_dir), "CropAndWeed", "CropOrWeed2")
-        print("CropOrWeed2 mapping completed successfully.")
-    except Exception as e:
-        print(f"Error during mapping: {e}")
-        raise
+    if target_variant.exists() and any(target_variant.glob("*.csv")):
+        print(f"CropOrWeed2 variant already populated in {target_variant}.")
+        return
+
+    third_party_cnw = Path(__file__).resolve().parent.parent / "third_party" / "cropandweed-dataset" / "cnw"
+    if not third_party_cnw.exists():
+        print("Cloning official cropandweed-dataset utility repository...")
+        import subprocess
+        tp_dir = Path(__file__).resolve().parent.parent / "third_party" / "cropandweed-dataset"
+        tp_dir.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            subprocess.run(
+                ["git", "clone", "--depth", "1", "https://github.com/cropandweed/cropandweed-dataset.git", str(tp_dir)],
+                check=True,
+                capture_output=True,
+            )
+        except Exception as e:
+            print(f"Could not clone third_party repo ({e}); using direct built-in mapper.")
+
+    if third_party_cnw.exists():
+        sys.path.insert(0, str(third_party_cnw))
+        try:
+            from map_dataset import map_dataset  # type: ignore
+            labelids_dir = data_root / "labelIds"
+            source_bboxes = bboxes_dir / "CropAndWeed"
+            if not source_bboxes.exists() and bboxes_dir.exists():
+                csv_files = [f for f in bboxes_dir.iterdir() if f.is_file() and f.suffix == ".csv"]
+                if csv_files:
+                    temp_dir = data_root / "CropAndWeed_temp"
+                    temp_dir.mkdir(exist_ok=True)
+                    for f in csv_files:
+                        shutil.move(str(f), str(temp_dir / f.name))
+                    source_bboxes.mkdir(parents=True, exist_ok=True)
+                    for f in temp_dir.iterdir():
+                        shutil.move(str(f), str(source_bboxes / f.name))
+                    temp_dir.rmdir()
+
+            map_dataset(str(bboxes_dir), str(labelids_dir), "CropAndWeed", "CropOrWeed2")
+            print("CropOrWeed2 mapping completed successfully.")
+            return
+        except Exception as e:
+            print(f"Official map_dataset raised ({e}); falling back to direct built-in mapper.")
+
+    # Direct mapping fallback
+    direct_map_croporweed2(bboxes_dir)
 
 
 def main() -> None:

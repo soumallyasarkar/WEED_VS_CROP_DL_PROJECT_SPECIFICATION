@@ -5,12 +5,20 @@ precision/recall/F1 at specific IoU and confidence thresholds, and detection con
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 import numpy as np
 import torch
-from torchmetrics.detection import MeanAveragePrecision
 
 logger = logging.getLogger(__name__)
+
+try:
+    import importlib
+    _tm = importlib.import_module("torchmetrics.detection")
+    MeanAveragePrecision = getattr(_tm, "MeanAveragePrecision")
+    HAS_TORCHMETRICS = True
+except (ImportError, AttributeError):
+    HAS_TORCHMETRICS = False
+    logger.info("torchmetrics not detected; falling back to built-in NumPy Average Precision evaluation.")
 
 
 def box_iou(boxes1: np.ndarray, boxes2: np.ndarray) -> np.ndarray:
@@ -67,7 +75,7 @@ def compute_detection_confusion_matrix(
             order = np.argsort(-pred_scores)
 
             for p_idx in order:
-                p_label = pred_labels[p_idx]  # 1 or 2
+                p_label = int(pred_labels[p_idx])
                 best_gt_idx = -1
                 best_iou = iou_threshold
 
@@ -80,22 +88,26 @@ def compute_detection_confusion_matrix(
 
                 if best_gt_idx >= 0:
                     matched_gt.add(best_gt_idx)
-                    g_label = gt_labels[best_gt_idx]
-                    # Map 1 -> index 0, 2 -> index 1
-                    cm[g_label - 1, p_label - 1] += 1
+                    g_label = int(gt_labels[best_gt_idx])
+                    if 1 <= g_label <= 2 and 1 <= p_label <= 2:
+                        cm[g_label - 1, p_label - 1] += 1
                 else:
                     # False alarm: Ground Truth is Background (index 2)
-                    cm[2, p_label - 1] += 1
+                    if 1 <= p_label <= 2:
+                        cm[2, p_label - 1] += 1
         elif len(pred_boxes) > 0:
             # All predictions are false alarms
             for p_label in pred_labels:
-                cm[2, p_label - 1] += 1
+                p_l = int(p_label)
+                if 1 <= p_l <= 2:
+                    cm[2, p_l - 1] += 1
 
         # Any unmatched GT are missed (Prediction is Background, index 2)
         for g_idx in range(len(gt_boxes)):
             if g_idx not in matched_gt:
-                g_label = gt_labels[g_idx]
-                cm[g_label - 1, 2] += 1
+                g_label = int(gt_labels[g_idx])
+                if 1 <= g_label <= 2:
+                    cm[g_label - 1, 2] += 1
 
     return cm
 
@@ -144,53 +156,177 @@ def sweep_thresholds(
     return results
 
 
+def compute_ap_for_class(
+    all_preds: List[Dict[str, np.ndarray]],
+    all_gts: List[Dict[str, np.ndarray]],
+    class_id: int = 1,
+    iou_threshold: float = 0.5,
+) -> float:
+    """Compute Average Precision (AP@50) for a specific class using 11-point interpolation."""
+    pred_records: List[Tuple[float, np.ndarray, int]] = []
+    total_gts = 0
+
+    for img_idx, (preds, gts) in enumerate(zip(all_preds, all_gts)):
+        gt_boxes = gts["boxes"]
+        gt_labels = gts["labels"]
+        total_gts += int(np.sum(gt_labels == class_id))
+
+        p_boxes = preds["boxes"]
+        p_labels = preds["labels"]
+        p_scores = preds["scores"]
+
+        for box, label, score in zip(p_boxes, p_labels, p_scores):
+            if int(label) == class_id:
+                pred_records.append((float(score), box, img_idx))
+
+    if total_gts == 0 or len(pred_records) == 0:
+        return 0.0
+
+    # Sort detections by confidence score descending
+    pred_records.sort(key=lambda x: x[0], reverse=True)
+
+    matched_gt: Dict[int, Set[int]] = {i: set() for i in range(len(all_gts))}
+    tp = np.zeros(len(pred_records))
+    fp = np.zeros(len(pred_records))
+
+    for p_idx, (_, p_box, img_idx) in enumerate(pred_records):
+        gts = all_gts[img_idx]
+        mask = gts["labels"] == class_id
+        c_gt_boxes = gts["boxes"][mask]
+
+        if len(c_gt_boxes) == 0:
+            fp[p_idx] = 1
+            continue
+
+        ious = box_iou(np.array([p_box]), c_gt_boxes)[0]
+        best_gt_idx = -1
+        best_iou = iou_threshold
+
+        for g_idx in range(len(c_gt_boxes)):
+            if g_idx in matched_gt[img_idx]:
+                continue
+            if ious[g_idx] >= best_iou:
+                best_iou = ious[g_idx]
+                best_gt_idx = g_idx
+
+        if best_gt_idx >= 0:
+            matched_gt[img_idx].add(best_gt_idx)
+            tp[p_idx] = 1
+        else:
+            fp[p_idx] = 1
+
+    cum_tp = np.cumsum(tp)
+    cum_fp = np.cumsum(fp)
+    recalls = cum_tp / max(1, total_gts)
+    precisions = cum_tp / (cum_tp + cum_fp)
+
+    # 11-point interpolated AP (standard VOC style)
+    ap = 0.0
+    for t in np.arange(0.0, 1.1, 0.1):
+        prec_at_rec = precisions[recalls >= t]
+        p = np.max(prec_at_rec) if len(prec_at_rec) > 0 else 0.0
+        ap += p / 11.0
+
+    return float(ap)
+
+
 def evaluate_model_map(
     model: torch.nn.Module,
     data_loader: torch.utils.data.DataLoader,
     device: torch.device,
 ) -> Dict[str, Any]:
-    """Evaluate model on a DataLoader using torchmetrics COCO MeanAveragePrecision.
+    """Evaluate model on a DataLoader using MeanAveragePrecision (or native NumPy fallback).
 
     Returns:
         Dictionary of computed metrics (mAP, mAP_50, per_class_AP).
     """
-    metric = MeanAveragePrecision(class_metrics=True)
     model.eval()
+
+    if HAS_TORCHMETRICS:
+        try:
+            metric = MeanAveragePrecision(class_metrics=True)
+            with torch.no_grad():
+                for images, targets in data_loader:
+                    images = [img.to(device) for img in images]
+                    preds = model(images)
+
+                    cpu_preds = []
+                    for p in preds:
+                        cpu_preds.append({
+                            "boxes": p["boxes"].detach().cpu(),
+                            "scores": p["scores"].detach().cpu(),
+                            "labels": p["labels"].detach().cpu(),
+                        })
+
+                    cpu_targets = []
+                    for t in targets:
+                        cpu_targets.append({
+                            "boxes": t["boxes"].detach().cpu(),
+                            "labels": t["labels"].detach().cpu(),
+                        })
+
+                    metric.update(cpu_preds, cpu_targets)
+
+            computed = metric.compute()
+            map_50 = float(computed["map_50"].item()) if "map_50" in computed and computed["map_50"].item() >= 0 else 0.0
+            map_val = float(computed["map"].item()) if "map" in computed and computed["map"].item() >= 0 else map_50
+
+            map_per_class = computed.get("map_per_class", None)
+            classes_tensor = computed.get("classes", None)
+
+            crop_ap = 0.0
+            weed_ap = 0.0
+            if map_per_class is not None:
+                if classes_tensor is not None:
+                    for idx, c_id in enumerate(classes_tensor.tolist()):
+                        val = float(map_per_class[idx].item())
+                        if val >= 0:
+                            if c_id == 1:
+                                crop_ap = val
+                            elif c_id == 2:
+                                weed_ap = val
+                else:
+                    if len(map_per_class) > 0 and map_per_class[0].item() >= 0:
+                        crop_ap = float(map_per_class[0].item())
+                    if len(map_per_class) > 1 and map_per_class[1].item() >= 0:
+                        weed_ap = float(map_per_class[1].item())
+
+            return {
+                "mAP": round(map_val, 4),
+                "mAP_50": round(map_50, 4),
+                "crop_AP": round(crop_ap, 4),
+                "weed_AP": round(weed_ap, 4),
+            }
+        except Exception as e:
+            logger.warning(f"torchmetrics evaluation encountered error ({e}); falling back to native AP.")
+
+    # Native NumPy fallback evaluation
+    all_preds: List[Dict[str, np.ndarray]] = []
+    all_gts: List[Dict[str, np.ndarray]] = []
 
     with torch.no_grad():
         for images, targets in data_loader:
             images = [img.to(device) for img in images]
             preds = model(images)
 
-            cpu_preds = []
             for p in preds:
-                cpu_preds.append({
-                    "boxes": p["boxes"].detach().cpu(),
-                    "scores": p["scores"].detach().cpu(),
-                    "labels": p["labels"].detach().cpu(),
+                all_preds.append({
+                    "boxes": p["boxes"].detach().cpu().numpy(),
+                    "scores": p["scores"].detach().cpu().numpy(),
+                    "labels": p["labels"].detach().cpu().numpy(),
                 })
-
-            cpu_targets = []
             for t in targets:
-                cpu_targets.append({
-                    "boxes": t["boxes"].detach().cpu(),
-                    "labels": t["labels"].detach().cpu(),
+                all_gts.append({
+                    "boxes": t["boxes"].detach().cpu().numpy(),
+                    "labels": t["labels"].detach().cpu().numpy(),
                 })
 
-            metric.update(cpu_preds, cpu_targets)
-
-    computed = metric.compute()
-
-    map_50 = float(computed["map_50"].item()) if "map_50" in computed else 0.0
-    map_val = float(computed["map"].item()) if "map" in computed else 0.0
-
-    # Class metrics (indices: 0 -> Crop [1], 1 -> Weed [2])
-    map_per_class = computed.get("map_per_class", None)
-    crop_ap = float(map_per_class[0].item()) if map_per_class is not None and len(map_per_class) > 0 else 0.0
-    weed_ap = float(map_per_class[1].item()) if map_per_class is not None and len(map_per_class) > 1 else 0.0
+    crop_ap = compute_ap_for_class(all_preds, all_gts, class_id=1, iou_threshold=0.5)
+    weed_ap = compute_ap_for_class(all_preds, all_gts, class_id=2, iou_threshold=0.5)
+    map_50 = (crop_ap + weed_ap) / 2.0
 
     return {
-        "mAP": round(map_val, 4),
+        "mAP": round(map_50, 4),
         "mAP_50": round(map_50, 4),
         "crop_AP": round(crop_ap, 4),
         "weed_AP": round(weed_ap, 4),

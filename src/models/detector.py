@@ -118,6 +118,14 @@ def load_checkpoint(
     if not path.is_file():
         raise FileNotFoundError(f"Checkpoint file not found: {path}")
 
+    # Fallback to CPU if CUDA is requested on a system without an active CUDA runtime
+    if isinstance(device, str) and "cuda" in device and not torch.cuda.is_available():
+        logger.warning("CUDA requested for checkpoint loading but not available. Falling back to CPU.")
+        device = "cpu"
+    elif isinstance(device, torch.device) and device.type == "cuda" and not torch.cuda.is_available():
+        logger.warning("CUDA device requested but not available. Falling back to CPU.")
+        device = torch.device("cpu")
+
     checkpoint = torch.load(path, map_location=device, weights_only=False)
 
     if model is None:

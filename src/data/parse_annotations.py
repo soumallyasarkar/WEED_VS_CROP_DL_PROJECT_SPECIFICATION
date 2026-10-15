@@ -106,14 +106,20 @@ def parse_params_csv(params_path: Path | str) -> Dict[str, int]:
     if not path.is_file():
         return {}
 
+    def _safe_int(val: Any, default: int = 0) -> int:
+        try:
+            return int(float(val))
+        except (ValueError, TypeError):
+            return default
+
     with open(path, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
             return {
-                "moisture": int(row.get("moisture", 0)),
-                "soil": int(row.get("soil", 0)),
-                "lighting": int(row.get("lighting", 0)),
-                "separability": int(row.get("separability", 0)),
+                "moisture": _safe_int(row.get("moisture")),
+                "soil": _safe_int(row.get("soil")),
+                "lighting": _safe_int(row.get("lighting")),
+                "separability": _safe_int(row.get("separability")),
             }
     return {}
 
