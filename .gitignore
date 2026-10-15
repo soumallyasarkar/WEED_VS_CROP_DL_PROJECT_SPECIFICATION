@@ -17,10 +17,16 @@ data/processed/*.pt
 *.tar.gz
 *.tar
 
-# Models and checkpoints
+# Models and checkpoints (ignore all intermediate/heavy checkpoints, allow only default best.pt)
+*.pt
+*.pth
+*.onnx
+*.ckpt
+*.bin
 models/*.pt
 models/*.pth
 models/*.onnx
+!models/best.pt
 
 # Third party repositories
 third_party/

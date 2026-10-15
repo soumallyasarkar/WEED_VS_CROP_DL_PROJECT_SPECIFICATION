@@ -1,4 +1,6 @@
 # Weed vs Crop Discrimination Using Deep Learning and Computer Vision
+> **Department of Computer Science and Engineering, Indian Institute of Information Technology Kottayam**  
+> **Project Authors:** Soumallya Sarkar (2023BCS0172) · N Kedar Vaishnav (2023BCS0163) · Veeramalla Balaji Bhargav (2023BCS0162)
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.5.1%2Bcu121-ee4c2c.svg)](https://pytorch.org/)
@@ -25,15 +27,112 @@ Whole-image classification cannot solve this problem because field images contai
 
 ---
 
-## 2. Directory Structure
+## 2. Quick Setup & Evaluation Guide (For Evaluators & Reviewers)
+
+> [!IMPORTANT]
+> **Academic Project Evaluation Guide:**  
+> **[Click here to open the Complete Setup & Evaluation Guide (`docs/SETUP_AND_EVALUATION_GUIDE.md`)](docs/SETUP_AND_EVALUATION_GUIDE.md)** for detailed walkthroughs, hardware benchmarks, evaluation rubrics, and dynamic training instructions.
+
+Follow these quick steps to clone, set up, and evaluate the project from GitHub:
+
+### 1. Clone and Activate Environment
+```bash
+# Clone the repository
+git clone https://github.com/soumallyasarkar/WEED_VS_CROP_DL_PROJECT_SPECIFICATION.git
+cd WEED_VS_CROP_DL_PROJECT_SPECIFICATION
+
+# Create virtual environment
+python -m venv .venv
+
+# Activate virtual environment
+# Windows (PowerShell):
+.\.venv\Scripts\Activate.ps1
+# Windows (CMD):
+.\.venv\Scripts\activate.bat
+# Linux / macOS:
+source .venv/bin/activate
+
+# Install frozen dependencies
+pip install -r requirements.txt
+```
+
+---
+
+### 2. Choose Your Evaluation Path
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           CHOOSE YOUR EVALUATION PATH                           │
+├────────────────────────────────────────┬────────────────────────────────────────┤
+│  OPTION A: INSTANT EVALUATION          │  OPTION B: RETRAIN FROM SCRATCH        │
+│  (No Dataset Download, No Training)    │  (Download Dataset & Custom Epochs)    │
+├────────────────────────────────────────┼────────────────────────────────────────┤
+│ • Pre-packaged model: models/best.pt   │ • Download official dataset (~3.5 GB)  │
+│ • 20 real field images in sample_images│ • Automated session-grouped split EDA  │
+│ • Launch interactive Streamlit web demo│ • Set epochs dynamically (--epochs N)  │
+│ • Run 12-test automated test suite     │ • Monitor live tqdm terminal progress  │
+│ • CLI single-image inference           │ • Re-evaluate test metrics & PR curves │
+└────────────────────────────────────────┴────────────────────────────────────────┘
+```
+
+#### Option A: Instant Visual Evaluation (Zero Download, Zero Wait)
+The default high-accuracy model weights (`models/best.pt`, 72.5 MB) and 20 real agricultural field photos ([`sample_images/`](sample_images/)) are **already bundled in the GitHub repository**!
+```bash
+streamlit run app/streamlit_app.py
+```
+- **Access the Dashboard:** Automatically opens in your browser at `http://localhost:8501`.
+- **Pre-packaged Sample Images:** Upload any real field photo from [`sample_images/`](sample_images/) (`ave-0000-0001.jpg`, `ave-0035-0001.jpg`, etc.) without downloading the full multi-GB dataset.
+- **Features for Evaluators:** Switch model checkpoints, toggle CPU vs. GPU, adjust the confidence slider (0.10–0.95), and inspect real-time KPIs (**Crop Count**, **Weed Count**, and **Weed Pressure Index %**).
+
+#### Option B: Download Dataset & Retrain with Custom Epochs
+If you wish to download the raw CropAndWeed dataset and train the detector yourself:
+
+1. **Download Raw Dataset & Annotations:**
+   ```bash
+   python scripts/download_dataset.py --parts annotations images1
+   ```
+2. **Generate Session-Grouped Splits (Zero Leakage) & Run EDA:**
+   ```bash
+   python scripts/prepare_dataset.py --config configs/default.yaml
+   ```
+3. **Train with Dynamic Epochs According to Your Available Time:**
+   Evaluators can dynamically set the number of training epochs directly via the CLI (`--epochs <N>`) without editing configuration files. Every run displays a real-time progress bar (`tqdm`) with live loss and ETA tracking.
+
+| Available Time | PowerShell / Bash Command | Samples | Epochs | GPU Time (RTX 2050) | CPU Time (Standard Laptop) | Evaluation Objective |
+|---|---|:---:|:---:|:---:|:---:|---|
+| **~20 Seconds** | `python src/training/train.py --samples 40 --epochs 1` | 40 imgs | 1 | **~20 sec** | **~45 sec** | **Live Viva Smoke Test**: Verify pipeline, loss backprop, and GPU execution in 20s. |
+| **~1 Minute** | `python src/training/train.py --epochs 1` | 300 imgs | 1 | **~1.0 min** | **~3 min** | **1-Epoch Verification**: Complete epoch pass, loss reduction & checkpoint saving. |
+| **~3 Minutes** | `python src/training/train.py --epochs 3` | 300 imgs | 3 | **~3.2 min** | **~8 min** | **3-Epoch Quick Demo**: Watch training loss decrease and validation mAP climb dynamically. |
+| **~5 Minutes** | `python src/training/train.py --epochs 5` | 300 imgs | 5 | **~4.9 min** | **~15 min** | **Standard Baseline**: Full baseline convergence (~44.18% validation mAP@0.5). |
+| **~28 Minutes** | `python src/training/train.py --config configs/high_accuracy.yaml` | 750 imgs | 10 | **~28 min** | **~50 min** | **High-Accuracy Run**: 750 images, achieving 54.86% test mAP@0.5. |
+
+> [!TIP]
+> **No GPU available? Force CPU mode:** Add `--device cpu` to any command (e.g., `python src/training/train.py --samples 40 --epochs 1 --device cpu`).
+
+---
+
+### 3. 10-Second Test Suite Verification
+Run all 12 unit and integration tests to verify model architecture, dataset pipelines, and strict zero session leakage:
+```bash
+pytest -v
+```
+*(Runs in ~10 seconds with 12/12 tests passing)*
+
+---
+
+## 3. Directory Structure
 
 ```text
 weed-vs-crop-discrimination/
 ├── configs/                      # Experiment configurations
 │   ├── default.yaml              # Full dataset configuration (10 epochs, 640x1024)
 │   ├── laptop.yaml               # Reduced image size & subset configuration
-│   └── smoke.yaml                # Ultra-fast pipeline validation (~20 images, 1 epoch)
+│   ├── smoke.yaml                # Ultra-fast pipeline validation (~20 images, 1 epoch)
+│   ├── high_accuracy.yaml        # 750-sample high accuracy training configuration
+│   └── full_dataset.yaml         # Complete 100% dataset (1,381 images) configuration
 ├── docs/                         # Comprehensive documentation
+│   ├── SETUP_AND_EVALUATION_GUIDE.md # Evaluator & reviewer setup guide with time breakdown
+│   ├── FIGURES_AND_SCREENSHOTS_GALLERY.md # Complete visual figures & detection gallery
 │   ├── WEED_VS_CROP_DL_PROJECT_SPECIFICATION.md # Full 10-phase project specification
 │   ├── dataset_notes.md          # Official dataset verification, layout & terms
 │   └── progress_log.md           # Phase-by-phase execution tracking & milestones
@@ -102,15 +201,15 @@ weed-vs-crop-discrimination/
 
 ---
 
-## 3. 🚀 How to Run This Project
+## 4. Detailed CLI Workflows & Evaluation Modes
 
 > [!TIP]
 > **Instant Try Out for First-Time Users:**
-> A curated folder of **20 real agricultural field photographs** ([`sample_images/`](file:///c:/Github/WEED_VS_CROP_DL_PROJECT_SPECIFICATION/sample_images)) is pre-packaged in the repository so you can test the CLI detector and the Streamlit web demo immediately without needing to download the multi-gigabyte dataset!
+> A curated folder of **20 real agricultural field photographs** ([`sample_images/`](sample_images/)) is pre-packaged in the repository so you can test the CLI detector and the Streamlit web demo immediately without needing to download the multi-gigabyte dataset!
 
-### 3.1 Environment Activation
+### 4.1 Environment Activation
 
-Before running commands, activate the virtual environment or use the direct binary paths:
+Before running commands, activate the virtual environment or use direct paths:
 
 * **Windows PowerShell:**
   ```powershell
@@ -125,18 +224,14 @@ Before running commands, activate the virtual environment or use the direct bina
   source .venv/bin/activate
   ```
 
-> [!NOTE]
-> You can also run any command directly without activating the environment by prefixing `.\.venv\Scripts\` on Windows (e.g., `.\.venv\Scripts\streamlit run ...` or `.\.venv\Scripts\python -m ...`).
-
 ---
 
-### 3.2 Run Mode 1: Interactive Streamlit Web Application (Recommended)
+### 4.2 Run Mode 1: Interactive Streamlit Web Application (Recommended)
 
 Launch the interactive web demo to upload field photographs, adjust detection confidence thresholds, and inspect real-time weed vs. crop bounding boxes:
 
 ```powershell
-# From the project root:
-.\.venv\Scripts\streamlit run app/streamlit_app.py
+streamlit run app/streamlit_app.py
 ```
 
 * **Access the App:** Open your browser at **`http://localhost:8501`**.
@@ -146,17 +241,17 @@ Launch the interactive web demo to upload field photographs, adjust detection co
   * Select **`cpu`** for standard CPU computation (~250–600 ms per image).
 * **Confidence Threshold Slider:** Adjust between `0.10` and `0.95` (recommended default: `0.50`). Lower thresholds catch more subtle/tiny weeds; higher thresholds avoid false herbicide alarms.
 * **Sample Images to Upload:**
-  * Ready-to-use sample images: Pick any image from [`sample_images/`](file:///c:/Github/WEED_VS_CROP_DL_PROJECT_SPECIFICATION/sample_images) (e.g., `sample_images/ave-0000-0001.jpg`, `sample_images/ave-0035-0005.jpg`)
+  * Ready-to-use sample images: Pick any image from [`sample_images/`](sample_images/) (e.g., `sample_images/ave-0000-0001.jpg`, `sample_images/ave-0035-0005.jpg`)
   * External test samples: `outputs/predictions/non_dataset_test_sample.jpg`
 
 ---
 
-### 3.3 Run Mode 2: Single-Image CLI Inference Engine
+### 4.3 Run Mode 2: Single-Image CLI Inference Engine
 
 Run inference directly from the command line on any field photograph (JPEG/PNG) and export both an annotated visual image and structured JSON results:
 
 ```powershell
-.\.venv\Scripts\python -m src.inference.predict --image sample_images/ave-0000-0001.jpg --checkpoint models/best.pt --score-threshold 0.50 --out outputs/predictions/
+python -m src.inference.predict --image sample_images/ave-0000-0001.jpg --checkpoint models/best.pt --score-threshold 0.50 --out outputs/predictions/
 ```
 
 * **Outputs Generated:**
@@ -165,15 +260,15 @@ Run inference directly from the command line on any field photograph (JPEG/PNG) 
 
 ---
 
-### 3.4 Run Mode 3: Automated Test Suite (12 Tests)
+### 4.4 Run Mode 3: Automated Test Suite (12 Tests)
 
 Execute the full suite of 12 unit and integration tests covering dataset loading, model forward passes, checkpoint integrity, label mapping, and zero data leakage:
 
 ```powershell
-.\.venv\Scripts\pytest -v
+pytest -v
 ```
 
-All 12 tests are located in [`tests/`](file:///c:/Github/WEED_VS_CROP_DL_PROJECT_SPECIFICATION/tests) and validate:
+All 12 tests are located in [`tests/`](tests/) and validate:
 1. `test_splits_zero_leakage`: Confirms zero session overlap between Train, Val, and Test splits.
 2. `test_verify_splits_integrity_catches_leakage`: Verifies split verifier detects simulated leakage.
 3. `test_checkpoint_save_and_load`: Tests full model state dictionary serialization and deserialization.
@@ -189,12 +284,12 @@ All 12 tests are located in [`tests/`](file:///c:/Github/WEED_VS_CROP_DL_PROJECT
 
 ---
 
-### 3.5 Run Mode 4: Test-Set Evaluation & Metric Reporting
+### 4.5 Run Mode 4: Test-Set Evaluation & Metric Reporting
 
 Evaluate the trained Faster R-CNN detector (`models/best.pt`) on the untouched 284 held-out test field images:
 
 ```powershell
-.\.venv\Scripts\python -m src.evaluation.evaluate --config configs/default.yaml --checkpoint models/best.pt
+python -m src.evaluation.evaluate --config configs/default.yaml --checkpoint models/best.pt
 ```
 
 * **Outputs Generated:**
@@ -204,30 +299,45 @@ Evaluate the trained Faster R-CNN detector (`models/best.pt`) on the untouched 2
 
 ---
 
-### 3.6 Run Mode 5: Model Training & Pipeline Sanity Testing
+### 4.6 Run Mode 5: Model Training & Dynamic Epoch Overrides
 
-To retrain or validate training pipelines from scratch:
+Train or validate models with dynamic CLI flags:
 
-* **Quick Smoke Test (20 images, 1 epoch):**
+* **Dynamic Epochs & Sample Count (Evaluator Mode - No Config Edits Needed):**
   ```powershell
-  .\.venv\Scripts\python -m src.training.train --config configs/smoke.yaml
+  # 20-second live test (40 samples, 1 epoch):
+  python src/training/train.py --samples 40 --epochs 1
+
+  # 3-minute demo (300 samples, 3 epochs):
+  python src/training/train.py --epochs 3
+
+  # Force CPU execution:
+  python src/training/train.py --samples 40 --epochs 1 --device cpu
   ```
-* **Laptop Configuration (Reduced image resolution, GPU/CPU friendly):**
+* **Smoke Test Config (20 images, 1 epoch):**
   ```powershell
-  .\.venv\Scripts\python -m src.training.train --config configs/laptop.yaml
+  python -m src.training.train --config configs/smoke.yaml
   ```
-* **Full Dataset Training (Full 1920x1088 resolution, 10 epochs):**
+* **Standard Laptop Baseline (300 images, 5 epochs):**
   ```powershell
-  .\.venv\Scripts\python -m src.training.train --config configs/default.yaml
+  python -m src.training.train --config configs/laptop.yaml
+  ```
+* **High-Accuracy Training (750 images, 10 epochs, 54.86% mAP@0.5):**
+  ```powershell
+  python -m src.training.train --config configs/high_accuracy.yaml
+  ```
+* **Full Dataset Training (All 1,381 images, 10 epochs):**
+  ```powershell
+  python -m src.training.train --config configs/full_dataset.yaml
   ```
 * **Patch CNN Baseline Classifier (Upper-bound classifier assuming perfect localization):**
   ```powershell
-  .\.venv\Scripts\python -m src.models.baseline --config configs/default.yaml --epochs 5
+  python -m src.models.baseline --config configs/default.yaml --epochs 5
   ```
 
 ---
 
-## 4. Dataset Acquisition & Preparation
+## 5. Dataset Acquisition & Preparation
 
 ### Download CropAndWeed Dataset
 The official tooling is cloned into `third_party/cropandweed-dataset`, downloading images and annotations directly from the official repository endpoint:
@@ -248,7 +358,7 @@ This generates:
 
 ---
 
-## 5. Hardware & CUDA Acceleration Note
+## 6. Hardware & CUDA Acceleration Note
 
 * **GPU Execution:** When running on an NVIDIA GPU with CUDA 12.1, PyTorch utilizes cuDNN accelerated convolution and FPN operations.
 * **VRAM Requirements:**
@@ -262,7 +372,7 @@ This generates:
 
 ---
 
-## 6. Observed Dataset & EDA Summary
+## 7. Observed Dataset & EDA Summary
 
 From the initial 2,003 validated field photographs (`1920x1088` resolution, 0 corrupt images):
 - **Crop Instances**: 5,128 annotations
@@ -274,12 +384,12 @@ From the initial 2,003 validated field photographs (`1920x1088` resolution, 0 co
   - `Large (> 256 px)`: 1,619 boxes (8.2%)
 - Over **68% of all instances are small or tiny**, verifying the necessity of Feature Pyramid Networks (FPN) for multi-scale feature resolution.
 
-### 6.1 Baseline Patch Classifier (Phase 5a)
+### 7.1 Baseline Patch Classifier (Phase 5a)
 Evaluated on 1,000 test patches with ground-truth boxes:
 - **Accuracy**: 75.60% (Majority baseline: 80.70%)
 - **Weed Precision**: 91.09% | **Weed Recall**: 77.32% | **Weed F1**: 83.65%
 
-### 6.2 Detector Performance on Untouched Test Set (Phase 7)
+### 7.2 Detector Performance on Untouched Test Set (Phase 7)
 Evaluated on 284 held-out test field images with Faster R-CNN MobileNetV3-Large FPN (`models/best.pt`):
 | Metric | Value | Description |
 |---|---|---|
@@ -302,7 +412,7 @@ Evaluated on 284 held-out test field images with Faster R-CNN MobileNetV3-Large 
 
 ---
 
-## 7. Limitations & Agricultural Risk Analysis
+## 8. Limitations & Agricultural Risk Analysis
 
 - **Site & Lighting Specificity**: The model was trained on ground-level handheld agricultural photos in Central Europe. Generalization to aerial drone imagery, tractor-mounted boom cameras, different crop cultivars, or arid soils cannot be assumed without domain adaptation.
 - **False Positive vs False Negative Costs**:
@@ -313,18 +423,37 @@ Evaluated on 284 held-out test field images with Faster R-CNN MobileNetV3-Large 
 
 ---
 
-## 8. License & Citations
+## 9. Authors & Project Team
+
+This project was developed at the **Indian Institute of Information Technology Kottayam (IIIT Kottayam)**, Department of Computer Science and Engineering:
+
+| Author | Roll Number | Department | Institution | Contact |
+|---|:---:|---|---|---|
+| **Soumallya Sarkar** | `2023BCS0172` | Computer Science and Engineering | Indian Institute of Information Technology Kottayam | [soumallya23bcs172@iiitkottayam.ac.in](mailto:soumallya23bcs172@iiitkottayam.ac.in) |
+| **N Kedar Vaishnav** | `2023BCS0163` | Computer Science and Engineering | Indian Institute of Information Technology Kottayam | [kedar23bcs163@iiitkottayam.ac.in](mailto:kedar23bcs163@iiitkottayam.ac.in) |
+| **Veeramalla Balaji Bhargav** | `2023BCS0162` | Computer Science and Engineering | Indian Institute of Information Technology Kottayam | [balaji23bcs162@iiitkottayam.ac.in](mailto:balaji23bcs162@iiitkottayam.ac.in) |
+
+---
+
+## 10. License & Citations
 
 The CropAndWeed dataset is made available by AIT Austrian Institute of Technology GmbH under a custom non-commercial license for academic, research, and educational purposes.
 
-If using this project, please cite:
+If citing this work, please use:
 ```bibtex
-@InProceedings{Steininger_2023_WACV,
-    author    = {Steininger, Daniel and Trondl, Andreas and Croonen, Gerardus and Simon, Julia and Widhalm, Verena},
-    title     = {The CropAndWeed Dataset: A Multi-Modal Learning Approach for Efficient Crop and Weed Manipulation},
-    booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
-    month     = {January},
-    year      = {2023},
-    pages     = {3729-3738}
+@article{sarkar2026weeddetection,
+  title     = {Weed Detection in Crop Fields Using Faster R-CNN with a MobileNetV3-Large Feature Pyramid Network},
+  author    = {Sarkar, Soumallya and Vaishnav, N Kedar and Bhargav, Veeramalla Balaji},
+  journal   = {Department of Computer Science and Engineering, Indian Institute of Information Technology Kottayam},
+  year      = {2026}
+}
+
+@inproceedings{Steininger_2023_WACV,
+  author    = {Steininger, Daniel and Trondl, Andreas and Croonen, Gerardus and Simon, Julia and Widhalm, Verena},
+  title     = {The CropAndWeed Dataset: A Multi-Modal Learning Approach for Efficient Crop and Weed Manipulation},
+  booktitle = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+  month     = {January},
+  year      = {2023},
+  pages     = {3729-3738}
 }
 ```

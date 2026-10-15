@@ -25,7 +25,12 @@ from src.utils.logging import setup_logger
 from src.utils.seed import set_seed
 
 
-def train(config_path: str = "configs/default.yaml") -> Dict[str, Any]:
+def train(
+    config_path: str = "configs/default.yaml",
+    epochs_override: int | None = None,
+    samples_override: int | None = None,
+    device_override: str | None = None,
+) -> Dict[str, Any]:
     """Execute training pipeline according to specification."""
     cfg = load_config(config_path)
     set_seed(cfg.get("seed", 42))
@@ -45,9 +50,12 @@ def train(config_path: str = "configs/default.yaml") -> Dict[str, Any]:
     logger.info(f"Loaded configuration from {config_path}")
 
     # Device
-    device_str = "cuda:0" if torch.cuda.is_available() else "cpu"
+    if device_override is not None:
+        device_str = device_override
+    else:
+        device_str = "cuda:0" if torch.cuda.is_available() else "cpu"
     device = torch.device(device_str)
-    logger.info(f"Training on device: {device} ({torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'})")
+    logger.info(f"Training on device: {device} ({torch.cuda.get_device_name(0) if 'cuda' in device_str and torch.cuda.is_available() else 'CPU'})")
 
     # Datasets and Loaders
     images_dir = raw_dir / "images"
@@ -56,7 +64,11 @@ def train(config_path: str = "configs/default.yaml") -> Dict[str, Any]:
     splits_path = processed_dir / "splits.csv"
 
     subset_fraction = float(cfg.data.get("subset_fraction", 1.0))
-    max_samples = cfg.data.get("max_samples", None)
+    if samples_override is not None:
+        max_samples = samples_override
+        logger.info(f"Dynamic CLI Override: max training samples set to {max_samples}")
+    else:
+        max_samples = cfg.data.get("max_samples", None)
 
     train_dataset = WeedCropDetectionDataset(
         images_dir=images_dir,
@@ -115,7 +127,12 @@ def train(config_path: str = "configs/default.yaml") -> Dict[str, Any]:
     else:
         optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=momentum, weight_decay=weight_decay)
 
-    epochs = int(cfg.train.get("epochs", 20))
+    if epochs_override is not None:
+        epochs = int(epochs_override)
+        logger.info(f"Dynamic CLI Override: training epochs set to {epochs}")
+    else:
+        epochs = int(cfg.train.get("epochs", 20))
+
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
 
     freeze_epochs = int(cfg.train.get("freeze_backbone_epochs", 0))
@@ -235,9 +252,17 @@ def train(config_path: str = "configs/default.yaml") -> Dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train Weed vs Crop Faster R-CNN detector.")
-    parser.add_argument("--config", type=str, default="configs/default.yaml", help="Path to YAML config")
+    parser.add_argument("--config", type=str, default="configs/laptop.yaml", help="Path to YAML config file (default: configs/laptop.yaml)")
+    parser.add_argument("--epochs", type=int, default=None, help="Dynamically set number of training epochs (e.g., 1, 2, 5, 10)")
+    parser.add_argument("--samples", type=int, default=None, help="Dynamically set max training samples (e.g., 50, 300, 750, 1381)")
+    parser.add_argument("--device", type=str, default=None, help="Force execution device ('cpu' or 'cuda')")
     args = parser.parse_args()
-    train(args.config)
+    train(
+        config_path=args.config,
+        epochs_override=args.epochs,
+        samples_override=args.samples,
+        device_override=args.device,
+    )
 
 
 if __name__ == "__main__":

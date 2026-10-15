@@ -170,7 +170,7 @@ Open your PowerShell terminal and run:
 
 ```text
 +-------------------------------------------------------------------------------------------------------------------+
-|  🌿 Field-Image Weed vs Crop AI Detector                                                    [ ● CUDA ACCELERATED ]|
+|  Field-Image Weed vs Crop AI Detector                                                      [ ● CUDA ACCELERATED ]|
 |  Detects, localizes, and discriminates crops and weeds using Faster R-CNN MobileNetV3-Large FPN                    |
 +-------------------------------------------------------------------------------------------------------------------+
 |  [ SIDEBAR SETTINGS ]      |                                                                                      |

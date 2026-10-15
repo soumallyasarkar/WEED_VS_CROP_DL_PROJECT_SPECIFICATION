@@ -93,7 +93,7 @@ def main():
     ckpt_path = Path(checkpoint_file)
     if not ckpt_path.is_file():
         st.error(
-            f"⚠️ Model checkpoint not found at `{checkpoint_file}`. "
+            f"Model checkpoint not found at `{checkpoint_file}`. "
             f"Please train the model first or verify the checkpoint path. Mock predictions are strictly forbidden."
         )
         st.info("Run `python -m src.training.train --config configs/laptop.yaml` to generate a checkpoint.")
@@ -119,7 +119,7 @@ def main():
 
         with col1:
             st.subheader("Original Image")
-            st.image(image, use_container_width=True)
+            st.image(image, width="stretch")
 
         if st.button("Detect Plants", type="primary"):
             with st.spinner("Analyzing field image..."):
@@ -129,10 +129,10 @@ def main():
 
             with col2:
                 st.subheader("Detection Results")
-                st.image(annotated_img, use_container_width=True)
+                st.image(annotated_img, width="stretch")
 
             # Metric KPIs
-            st.markdown("### 📊 Field Analysis Summary")
+            st.markdown("### Field Analysis Summary")
             kpi1, kpi2, kpi3, kpi4 = st.columns(4)
             kpi1.metric("Total Plants", f"{summary['total_plants']}")
             kpi2.metric("Crop Plants", f"{summary['n_crop']}", delta="Preserve")
@@ -141,19 +141,19 @@ def main():
 
             # Warning conditions
             if summary["total_plants"] == 0:
-                st.warning("⚠️ No plant detections met the confidence threshold. Check image lighting or adjust threshold.")
+                st.warning("No plant detections met the confidence threshold. Check image lighting or adjust threshold.")
             elif summary["mean_confidence"] < 0.60:
                 st.warning(
-                    f"⚠️ Low average confidence ({summary['mean_confidence']:.2f}). "
+                    f"Low average confidence ({summary['mean_confidence']:.2f}). "
                     f"Results may be unreliable for this scene (possible domain shift or unusual lighting)."
                 )
 
             # Detailed detections table
             if detections:
-                st.markdown("### 📋 Detected Instances Table")
+                st.markdown("### Detected Instances Table")
                 df = pd.DataFrame(detections)[["label", "score", "box"]]
                 df["box"] = df["box"].apply(lambda b: f"[{b[0]:.0f}, {b[1]:.0f}, {b[2]:.0f}, {b[3]:.0f}]")
-                st.dataframe(df, use_container_width=True)
+                st.dataframe(df, width="stretch")
 
     st.markdown("---")
     st.caption(
